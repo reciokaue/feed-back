@@ -9,7 +9,7 @@ export async function formRoutes(app: FastifyInstance) {
         id: 'asc',
       },
       include: {
-        questions: true
+        _count: true
       }
     })
 
@@ -25,7 +25,12 @@ export async function formRoutes(app: FastifyInstance) {
     const form = await prisma.form.findUniqueOrThrow({
       where: { id },
       include: {
-        questions: true
+        questions: {
+          include: {
+            responses: true,
+            _count: true,
+          }
+        }
       }
     })
 
