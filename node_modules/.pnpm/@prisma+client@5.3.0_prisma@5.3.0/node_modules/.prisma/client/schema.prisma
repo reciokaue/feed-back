@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Form {
+  id        String     @id @default(uuid())
+  name      String
+  about     String?
+  questions Question[]
+  Answer    Answer[]
+}
+
+model Question {
+  id           String     @id @default(uuid())
+  questionType String // Can be 'text', 'number', 'image', etc.
+  text         String
+  form         Form       @relation(fields: [formId], references: [id])
+  formId       String
+  answers      Answer[]
+  responses    Response[]
+}
+
+model Response {
+  id         String   @id @default(uuid())
+  text       String
+  value      Int // 1 to 10 
+  Question   Question @relation(fields: [questionId], references: [id])
+  questionId String
+  Answer     Answer[]
+}
+
+model Topic {
+  id    String @id @default(uuid())
+  title String
+}
+
+model QuestionType {
+  id   String @id @default(uuid())
+  type String
+}
+
+model Answer {
+  id         String   @id @default(uuid())
+  value      String // text or id of response
+  question   Question @relation(fields: [questionId], references: [id])
+  questionId String
+  form       Form     @relation(fields: [formId], references: [id])
+  formId     String
+  responseId String
+  response   Response @relation(fields: [responseId], references: [id])
+}
