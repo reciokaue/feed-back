@@ -7,50 +7,76 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+generator erd {
+  provider                  = "prisma-erd-generator"
+  output                    = "ERD.png"
+  theme                     = "forest"
+  includeRelationFromFields = true
+}
+
 model Form {
   id        String     @id @default(uuid())
   name      String
   about     String?
+  userId    String // Chave estrangeira para o User
+  user      User       @relation(fields: [userId], references: [id])
+  topicId   String // Chave estrangeira para o Topic
+  topic     Topic      @relation(fields: [topicId], references: [id])
   questions Question[]
-  Answer    Answer[]
+  answers   Answer[]
+}
+
+model User {
+  id       String @id @default(uuid())
+  name     String
+  email    String
+  password String
+  forms    Form[] // Um usuário pode ter vários formulários
 }
 
 model Question {
-  id           String     @id @default(uuid())
-  questionType String // Can be 'text', 'number', 'image', etc.
-  text         String
-  form         Form       @relation(fields: [formId], references: [id])
-  formId       String
-  answers      Answer[]
-  responses    Response[]
+  id             String       @id @default(uuid())
+  text           String
+  formId         String
+  IsCustom       Boolean // Define é padrão ou personalizada
+  form           Form         @relation(fields: [formId], references: [id])
+  questionTypeId String // Pode ser 'text', 'number', 'image', etc.
+  questionType   QuestionType @relation(fields: [questionTypeId], references: [id])
+  topicId        String // Chave estrangeira para o Topic
+  topic          Topic        @relation(fields: [topicId], references: [id])
+  options        Option[]
+  Answer         Answer[]
 }
 
-model Response {
+model Option {
   id         String   @id @default(uuid())
   text       String
-  value      Int // 1 to 10 
-  Question   Question @relation(fields: [questionId], references: [id])
+  value      Int // 1 to 10
   questionId String
+  question   Question @relation(fields: [questionId], references: [id])
   Answer     Answer[]
 }
 
 model Topic {
-  id    String @id @default(uuid())
-  title String
+  id       String     @id @default(uuid())
+  title    String
+  Form     Form[]
+  Question Question[]
 }
 
 model QuestionType {
-  id   String @id @default(uuid())
-  type String
+  id       String     @id @default(uuid())
+  type     String
+  Question Question[]
 }
 
 model Answer {
   id         String   @id @default(uuid())
-  value      String // text or id of response
-  question   Question @relation(fields: [questionId], references: [id])
+  value      String // Text or ID of the option
   questionId String
-  form       Form     @relation(fields: [formId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id])
   formId     String
-  responseId String
-  response   Response @relation(fields: [responseId], references: [id])
+  form       Form     @relation(fields: [formId], references: [id])
+  optionId   String?
+  option     Option?  @relation(fields: [optionId], references: [id])
 }

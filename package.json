@@ -18,10 +18,12 @@
     "zod": "^3.22.2"
   },
   "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^10.4.0",
     "@rocketseat/eslint-config": "^2.1.0",
     "@types/node": "^20.6.0",
     "eslint": "^8.49.0",
     "prisma": "^5.3.0",
+    "prisma-erd-generator": "^1.11.1",
     "tsx": "^3.12.10",
     "typescript": "^5.2.2"
   }
