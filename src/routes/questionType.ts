@@ -2,11 +2,11 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 
-export async function topicRoutes(app: FastifyInstance) {
-  app.get('/topic', async (request) => {
+export async function questionTypeRoutes(app: FastifyInstance) {
+  app.get('/questionType', async (request) => {
     const { q }: any = request.query
 
-    const topic = await prisma.topic.findMany({
+    const questionType = await prisma.questionType.findMany({
       orderBy: {
         name: 'asc',
       },
@@ -15,32 +15,32 @@ export async function topicRoutes(app: FastifyInstance) {
       }
     })
 
-    return topic
+    return questionType
   })
-  app.post('/topic', async (request) => {
+  app.post('/questionType', async (request) => {
     const bodySchema = z.object({
       name: z.string(),
     })
     const { name } = bodySchema.parse(request.body)
-    const topic = await prisma.topic.create({
+    const questionType = await prisma.questionType.create({
       data: { name },
     })
 
-    return topic
+    return questionType
   })
-  app.delete('/topic/:name', async (request, reply) => {
+  app.delete('/questionType/:name', async (request, reply) => {
     const paramsSchema = z.object({
       name: z.string()
     })
     const { name } = paramsSchema.parse(request.params)
-    const topic = await prisma.topic.findUniqueOrThrow({
+    const questionType = await prisma.questionType.findUniqueOrThrow({
       where: {
         name,
       },
     })
-    await prisma.topic.delete({
+    await prisma.questionType.delete({
       where: { name },
     })
-    return topic
+    return questionType
   })
 }

@@ -9,7 +9,7 @@ datasource db {
 
 generator erd {
   provider                  = "prisma-erd-generator"
-  output                    = "ERD.png"
+  output                    = "ERD.svg"
   theme                     = "forest"
   includeRelationFromFields = true
 }
@@ -20,8 +20,8 @@ model Form {
   about     String?
   userId    String // Chave estrangeira para o User
   user      User       @relation(fields: [userId], references: [id])
-  topicId   String // Chave estrangeira para o Topic
-  topic     Topic      @relation(fields: [topicId], references: [id])
+  topicName String // Chave estrangeira para o Topic
+  topic     Topic      @relation(fields: [topicName], references: [name])
   questions Question[]
   answers   Answer[]
 }
@@ -35,17 +35,17 @@ model User {
 }
 
 model Question {
-  id             String       @id @default(uuid())
-  text           String
-  formId         String
-  IsCustom       Boolean // Define é padrão ou personalizada
-  form           Form         @relation(fields: [formId], references: [id])
-  questionTypeId String // Pode ser 'text', 'number', 'image', etc.
-  questionType   QuestionType @relation(fields: [questionTypeId], references: [id])
-  topicId        String // Chave estrangeira para o Topic
-  topic          Topic        @relation(fields: [topicId], references: [id])
-  options        Option[]
-  Answer         Answer[]
+  id               String       @id @default(uuid())
+  text             String
+  formId           String
+  IsCustom         Boolean // Define é padrão ou personalizada
+  form             Form         @relation(fields: [formId], references: [id])
+  questionTypeName String // Pode ser 'text', 'number', 'image', etc.
+  questionType     QuestionType @relation(fields: [questionTypeName], references: [name])
+  topicName        String // Chave estrangeira para o Topic
+  topic            Topic        @relation(fields: [topicName], references: [name])
+  options          Option[]
+  Answer           Answer[]
 }
 
 model Option {
@@ -58,15 +58,13 @@ model Option {
 }
 
 model Topic {
-  id       String     @id @default(uuid())
-  title    String
+  name     String     @id @unique
   Form     Form[]
   Question Question[]
 }
 
 model QuestionType {
-  id       String     @id @default(uuid())
-  type     String
+  name     String     @id @unique
   Question Question[]
 }
 
@@ -74,6 +72,7 @@ model Answer {
   id         String   @id @default(uuid())
   value      String // Text or ID of the option
   questionId String
+  createdAt  DateTime @default(now())
   question   Question @relation(fields: [questionId], references: [id])
   formId     String
   form       Form     @relation(fields: [formId], references: [id])

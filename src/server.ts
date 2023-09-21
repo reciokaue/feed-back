@@ -6,12 +6,14 @@ import cors from '@fastify/cors'
 import { formRoutes } from './routes/form'
 import { questionRoutes } from './routes/question'
 import { topicRoutes } from './routes/topic'
+import { questionTypeRoutes } from './routes/questionType'
 
 const app = fastify()
 
 app.register(formRoutes)
 app.register(questionRoutes)
 app.register(topicRoutes)
+app.register(questionTypeRoutes)
 
 app.register(cors, {origin: true})
 app.listen({port: 3333, host: '0.0.0.0'})
