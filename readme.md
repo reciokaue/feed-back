@@ -8,6 +8,26 @@
 
 # Routes
 
+### Auth
+- POST "/register" receives:
+  ```
+    {
+      "name": "Teste",
+      "email": "email@gmail.com",
+      "password": "Senha123"
+    }
+  ``` 
+  Return: token
+
+- POST "/register" receives:
+  ```
+    {
+      "email": "email@gmail.com",
+	    "password": "Senha123"
+    }
+  ``` 
+  Return: token
+
 GET
 "/form"
 "/form:formId"
