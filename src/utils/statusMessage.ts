@@ -1,0 +1,20 @@
+export const statusMessage = {
+  success: { message: 'Success' },
+  created: { message: 'Resource created' },
+  accepted: { message: 'Request accepted' },
+  noContent: { message: 'No content' },
+  invalidPassword: { message: 'Wrong password' },
+  emailAlreadyExistis: {
+    message: 'This email already existis, please use another',
+  },
+  emailNotExist: { message: "Email doesn't exist" },
+  badRequest: { message: 'Bad request' },
+  unauthorized: { message: 'Unauthorized' },
+  forbidden: { message: 'Forbidden' },
+  notFound: { message: 'Not found' },
+  methodNotAllowed: { message: 'Method not allowed' },
+  conflict: { message: 'Conflict' },
+  unprocessableEntity: { message: 'Unprocessable entity' },
+  tooManyRequests: { message: 'Too many requests' },
+  internalServerError: { message: 'Internal server error' },
+}
