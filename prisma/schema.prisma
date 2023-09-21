@@ -15,15 +15,15 @@ generator erd {
 }
 
 model Form {
-  id        String     @id @default(uuid())
-  name      String
-  about     String?
-  userId    String // Chave estrangeira para o User
-  user      User       @relation(fields: [userId], references: [id])
-  topicName String // Chave estrangeira para o Topic
-  topic     Topic      @relation(fields: [topicName], references: [name])
-  questions Question[]
-  answers   Answer[]
+  id         String     @id @default(uuid())
+  name       String
+  about      String?
+  userId     String // Chave estrangeira para o User
+  user       User       @relation(fields: [userId], references: [id])
+  topic      String // Chave estrangeira para o Topic
+  topicModel Topic      @relation(fields: [topic], references: [name])
+  questions  Question[]
+  answers    Answer[]
 }
 
 model User {
@@ -35,17 +35,17 @@ model User {
 }
 
 model Question {
-  id               String       @id @default(uuid())
-  text             String
-  formId           String
-  IsCustom         Boolean // Define é padrão ou personalizada
-  form             Form         @relation(fields: [formId], references: [id])
-  questionTypeName String // Pode ser 'text', 'number', 'image', etc.
-  questionType     QuestionType @relation(fields: [questionTypeName], references: [name])
-  topicName        String // Chave estrangeira para o Topic
-  topic            Topic        @relation(fields: [topicName], references: [name])
-  options          Option[]
-  Answer           Answer[]
+  id           String       @id @default(uuid())
+  text         String
+  formId       String
+  IsCustom     Boolean      @default(true) // Define se é padrão ou personalizada
+  form         Form         @relation(fields: [formId], references: [id])
+  type         String // Pode ser 'text', 'number', 'image', etc.
+  questionType QuestionType @relation(fields: [type], references: [name])
+  topic        String // Chave estrangeira para o Topic
+  topicModel   Topic        @relation(fields: [topic], references: [name])
+  options      Option[]
+  Answer       Answer[]
 }
 
 model Option {

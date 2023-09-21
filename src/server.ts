@@ -15,8 +15,7 @@ app.register(questionRoutes)
 app.register(topicRoutes)
 app.register(questionTypeRoutes)
 
-app.register(cors, {origin: true})
-app.listen({port: 3333, host: '0.0.0.0'})
-.then(() => {
+app.register(cors, { origin: true })
+app.listen({ port: 3333, host: '0.0.0.0' }).then(() => {
   console.log('HTTP server listening on http://localhost:3333')
 })

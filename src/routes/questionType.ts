@@ -4,15 +4,16 @@ import { z } from 'zod'
 
 export async function questionTypeRoutes(app: FastifyInstance) {
   app.get('/questionType', async (request) => {
-    const { q }: any = request.query
+    const bodySchema = z.object({ q: z.string().nullable() })
+    const { q } = bodySchema.parse(request.query)
 
     const questionType = await prisma.questionType.findMany({
       orderBy: {
         name: 'asc',
       },
       where: {
-        name: { contains: q }
-      }
+        name: { contains: q || undefined },
+      },
     })
 
     return questionType
@@ -28,9 +29,9 @@ export async function questionTypeRoutes(app: FastifyInstance) {
 
     return questionType
   })
-  app.delete('/questionType/:name', async (request, reply) => {
+  app.delete('/questionType/:name', async (request) => {
     const paramsSchema = z.object({
-      name: z.string()
+      name: z.string(),
     })
     const { name } = paramsSchema.parse(request.params)
     const questionType = await prisma.questionType.findUniqueOrThrow({

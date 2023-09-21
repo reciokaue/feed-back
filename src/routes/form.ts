@@ -9,8 +9,8 @@ export async function formRoutes(app: FastifyInstance) {
         id: 'asc',
       },
       include: {
-        _count: true
-      }
+        _count: true,
+      },
     })
 
     return form
@@ -27,11 +27,11 @@ export async function formRoutes(app: FastifyInstance) {
       include: {
         questions: {
           include: {
-            responses: true,
+            options: true,
             _count: true,
-          }
-        }
-      }
+          },
+        },
+      },
     })
 
     return form
@@ -47,7 +47,7 @@ export async function formRoutes(app: FastifyInstance) {
     const form = await prisma.form.create({
       data: {
         name,
-        about
+        about,
       },
     })
 

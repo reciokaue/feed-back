@@ -14,13 +14,13 @@ export async function questionRoutes(app: FastifyInstance) {
         id: 'asc',
       },
       where: {
-        formId
-      }
+        formId,
+      },
     })
 
     return question
   })
-  app.get('/question/:id', async (request, reply) => {
+  app.get('/question/:id', async (request) => {
     const paramsSchema = z.object({
       id: z.string().uuid(),
     })
@@ -37,34 +37,43 @@ export async function questionRoutes(app: FastifyInstance) {
       text: z.string(),
       formId: z.string().uuid(),
       questionType: z.string(),
-      responses: z.array(z.object({
-        text: z.string(),
-        value: z.number().nonnegative().lte(10),
-      }))
+      topic: z.string(),
+      responses: z.array(
+        z.object({
+          text: z.string(),
+          value: z.number().nonnegative().lte(10),
+        }),
+      ),
     })
-    const { text, formId, questionType, responses } = bodySchema.parse(request.body)
+    const { text, formId, questionType, responses, topic } = bodySchema.parse(
+      request.body,
+    )
     console.log(responses)
 
     const question = await prisma.question.create({
       data: {
-        text, formId, questionType,
-        responses: {
-          create: responses.map(response => {
+        text,
+        formId,
+        type: questionType,
+        IsCustom: true,
+        topic,
+        options: {
+          create: responses.map((response) => {
             return {
               text: response.text,
               value: response.value, // Assuming response has text and value properties
-            };
+            }
           }),
         },
       },
       include: {
-        responses: true
-      }
+        options: true,
+      },
     })
 
     return question
   })
-  app.put('/question/:id', async (request, reply) => {
+  app.put('/question/:id', async (request) => {
     const paramsSchema = z.object({
       id: z.string().uuid(),
     })
@@ -88,13 +97,15 @@ export async function questionRoutes(app: FastifyInstance) {
         id,
       },
       data: {
-        text, formId, questionType
+        text,
+        formId,
+        type: questionType,
       },
     })
 
     return question
   })
-  app.delete('/question/:id', async (request, reply) => {
+  app.delete('/question/:id', async (request) => {
     const paramsSchema = z.object({
       id: z.string().uuid(),
     })
