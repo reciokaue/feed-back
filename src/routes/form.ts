@@ -1,16 +1,33 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
+import { statusMessage } from '../utils/statusMessage'
+import { statusCode } from '../utils/statusCode'
+
+interface jwtUser {
+  name: string
+  email: string
+  sub: string
+  iat: number
+  exp: number
+}
 
 export async function formRoutes(app: FastifyInstance) {
+  app.addHook('onRequest', async (request, reply) => {
+    try {
+      await request.jwtVerify()
+    } catch (err) {
+      reply.send(statusMessage.notVerified)
+    }
+  })
+
   app.get('/form', async (request) => {
+    const user = request.user as jwtUser
+
     const form = await prisma.form.findMany({
-      orderBy: {
-        id: 'asc',
-      },
-      include: {
-        _count: true,
-      },
+      orderBy: { id: 'asc' },
+      where: { userId: user.sub },
+      include: { _count: true },
     })
 
     return form
@@ -36,18 +53,29 @@ export async function formRoutes(app: FastifyInstance) {
 
     return form
   })
-  app.post('/form', async (request) => {
+  app.post('/form', async (request, reply) => {
+    const user = request.user as jwtUser
     const bodySchema = z.object({
       name: z.string(),
       about: z.string(),
+      topic: z.string(),
     })
+    const { name, about, topic } = bodySchema.parse(request.body)
 
-    const { name, about } = bodySchema.parse(request.body)
+    const topicExistis = await prisma.topic.findUnique({
+      where: {
+        name: topic,
+      },
+    })
+    if (!topicExistis)
+      return reply.status(statusCode.notFound).send(statusMessage.topicNotFound)
 
     const form = await prisma.form.create({
       data: {
         name,
         about,
+        topic,
+        userId: user.sub,
       },
     })
 
@@ -83,7 +111,7 @@ export async function formRoutes(app: FastifyInstance) {
 
     return form
   })
-  app.delete('/form/:id', async (request, reply) => {
+  app.delete('/form/:id', async (request) => {
     const paramsSchema = z.object({
       id: z.string().uuid(),
     })
@@ -98,5 +126,6 @@ export async function formRoutes(app: FastifyInstance) {
     await prisma.form.delete({
       where: { id },
     })
+    return form
   })
 }
