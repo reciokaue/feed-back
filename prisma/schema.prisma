@@ -18,6 +18,7 @@ model Form {
   id         String     @id @default(uuid())
   name       String
   about      String?
+  IsCustom   Boolean    @default(true) // Define se é padrão ou personalizada
   userId     String // Chave estrangeira para o User
   user       User       @relation(fields: [userId], references: [id])
   topic      String // Chave estrangeira para o Topic

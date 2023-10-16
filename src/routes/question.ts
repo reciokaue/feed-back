@@ -1,24 +1,68 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
+import { statusMessage } from '../utils/statusMessage'
+import { jwtUser } from '../types/jwtUser'
 
 export async function questionRoutes(app: FastifyInstance) {
-  app.get('/form/question/:formId', async (request) => {
+  app.addHook('onRequest', async (request, reply) => {
+    try {
+      await request.jwtVerify()
+    } catch (err) {
+      reply.send(statusMessage.notVerified)
+    }
+  })
+
+  app.post('/form/:formId/question', async (request) => {
+    const user = request.user as jwtUser
     const paramsSchema = z.object({
       formId: z.string().uuid(),
     })
+    const bodySchema = z.array(
+      z.object({
+        text: z.string(),
+        type: z.string(),
+        topic: z.string(),
+        options: z.array(
+          z.object({
+            text: z.string(),
+            value: z.number().nonnegative().lte(10),
+          }),
+        ),
+      }),
+    )
+
     const { formId } = paramsSchema.parse(request.params)
+    console.log(request.body)
+    const questions = bodySchema.parse(request.body)
+    console.log(questions)
 
-    const question = await prisma.question.findMany({
-      orderBy: {
-        id: 'asc',
-      },
-      where: {
-        formId,
-      },
-    })
+    const createdQuestions = await Promise.all(
+      questions.map(async (question) => {
+        const { type, text, topic } = question
+        const optionsData = question.options.map((response) => ({
+          text: response.text,
+          value: response.value,
+        }))
 
-    return question
+        const newQuestion = await prisma.question.create({
+          data: {
+            formId,
+            IsCustom: true,
+            type,
+            text,
+            topic,
+            options: {
+              create: optionsData,
+            },
+          },
+        })
+
+        return newQuestion
+      }),
+    )
+
+    return createdQuestions
   })
   app.get('/question/:id', async (request) => {
     const paramsSchema = z.object({

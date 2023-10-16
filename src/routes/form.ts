@@ -3,14 +3,7 @@ import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { statusMessage } from '../utils/statusMessage'
 import { statusCode } from '../utils/statusCode'
-
-interface jwtUser {
-  name: string
-  email: string
-  sub: string
-  iat: number
-  exp: number
-}
+import { jwtUser } from '../types/jwtUser'
 
 export async function formRoutes(app: FastifyInstance) {
   app.addHook('onRequest', async (request, reply) => {
