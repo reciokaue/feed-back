@@ -10,7 +10,8 @@ datasource db {
 generator erd {
   provider                  = "prisma-erd-generator"
   output                    = "ERD.svg"
-  theme                     = "forest"
+  theme                     = "neutral"
+  disableEmoji              = true
   includeRelationFromFields = true
 }
 
@@ -18,7 +19,10 @@ model Form {
   id         String     @id @default(uuid())
   name       String
   about      String?
-  IsCustom   Boolean    @default(true) // Define se é padrão ou personalizada
+  active     Boolean
+  isDefault  Boolean    @default(false) // Define se é padrão ou personalizada
+  createdAt  DateTime   @default(now())
+  endedAt    DateTime?
   userId     String // Chave estrangeira para o User
   user       User       @relation(fields: [userId], references: [id])
   topic      String // Chave estrangeira para o Topic
@@ -28,25 +32,28 @@ model Form {
 }
 
 model User {
-  id       String @id @default(uuid())
-  name     String
-  email    String @unique
-  password String
-  forms    Form[] // Um usuário pode ter vários formulários
+  id             String        @id @default(uuid())
+  name           String
+  email          String        @unique
+  password       String
+  forms          Form[] // Um usuário pode ter vários formulários
+  cards          CreditCard[]
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  subscriptionId String?
+  EventLog       EventLog[]
 }
 
 model Question {
-  id           String       @id @default(uuid())
-  text         String
-  formId       String
-  IsCustom     Boolean      @default(true) // Define se é padrão ou personalizada
-  form         Form         @relation(fields: [formId], references: [id])
-  type         String // Pode ser 'text', 'number', 'image', etc.
-  questionType QuestionType @relation(fields: [type], references: [name])
-  topic        String // Chave estrangeira para o Topic
-  topicModel   Topic        @relation(fields: [topic], references: [name])
-  options      Option[]
-  Answer       Answer[]
+  id         String   @id @default(uuid())
+  text       String
+  formId     String
+  isDefault  Boolean  @default(false) // Define se é padrão ou personalizada
+  form       Form     @relation(fields: [formId], references: [id])
+  type       String // Pode ser 'text', 'number', 'image', etc.
+  topic      String // Chave estrangeira para o Topic
+  topicModel Topic    @relation(fields: [topic], references: [name])
+  options    Option[]
+  Answer     Answer[]
 }
 
 model Option {
@@ -64,11 +71,6 @@ model Topic {
   Question Question[]
 }
 
-model QuestionType {
-  name     String     @id @unique
-  Question Question[]
-}
-
 model Answer {
   id         String   @id @default(uuid())
   value      String // Text or ID of the option
@@ -79,4 +81,41 @@ model Answer {
   form       Form     @relation(fields: [formId], references: [id])
   optionId   String?
   option     Option?  @relation(fields: [optionId], references: [id])
+}
+
+model Subscription {
+  id             String           @id @default(uuid())
+  planId         String
+  monthlyPrice   Float
+  status         String
+  startDate      DateTime
+  endDate        DateTime
+  User           User[]
+  PaymentHistory PaymentHistory[]
+}
+
+model PaymentHistory {
+  id             String       @id @default(uuid())
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  date           DateTime
+  value          Float
+  status         String // Status do pagamento (aprovado, pendente, falha, etc)
+  subscriptionId String
+}
+
+model CreditCard {
+  id             String   @id @default(uuid())
+  cardNumber     String
+  expirationDate DateTime
+  cvv            String
+  cardType       String
+  userId         String // Chave estrangeira para o User
+  user           User     @relation(fields: [userId], references: [id])
+}
+
+model EventLog {
+  id          String @id @default(uuid())
+  user        User   @relation(fields: [userId], references: [id])
+  description String //Descrição do evento (por exemplo, "Criação de Assinatura", "Cancelamento de Assinatura")
+  userId      String
 }
