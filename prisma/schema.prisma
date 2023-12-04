@@ -29,6 +29,7 @@ model Form {
   topicModel Topic      @relation(fields: [topic], references: [name])
   questions  Question[]
   answers    Answer[]
+  logoUrl    String?
 }
 
 model User {
@@ -37,23 +38,31 @@ model User {
   email          String        @unique
   password       String
   forms          Form[] // Um usuário pode ter vários formulários
-  cards          CreditCard[]
   subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
   subscriptionId String?
-  EventLog       EventLog[]
+  eventLogs      EventLog[]
+  cards          CreditCard[]
+}
+
+model QuestionType {
+  id        String     @id @default(uuid())
+  type      String
+  questions Question[]
 }
 
 model Question {
-  id         String   @id @default(uuid())
-  text       String
-  formId     String
-  isDefault  Boolean  @default(false) // Define se é padrão ou personalizada
-  form       Form     @relation(fields: [formId], references: [id])
-  type       String // Pode ser 'text', 'number', 'image', etc.
-  topic      String // Chave estrangeira para o Topic
-  topicModel Topic    @relation(fields: [topic], references: [name])
-  options    Option[]
-  Answer     Answer[]
+  id             String        @id @default(uuid())
+  text           String
+  formId         String
+  isDefault      Boolean       @default(false) // Define se é padrão ou personalizada
+  form           Form          @relation(fields: [formId], references: [id])
+  type           String // Pode ser 'text', 'number', 'image', etc.
+  topic          String // Chave estrangeira para o Topic
+  topicModel     Topic         @relation(fields: [topic], references: [name])
+  options        Option[]
+  Answer         Answer[]
+  QuestionType   QuestionType? @relation(fields: [questionTypeId], references: [id])
+  questionTypeId String?
 }
 
 model Option {
@@ -84,14 +93,16 @@ model Answer {
 }
 
 model Subscription {
-  id             String           @id @default(uuid())
-  planId         String
-  monthlyPrice   Float
-  status         String
-  startDate      DateTime
-  endDate        DateTime
-  User           User[]
-  PaymentHistory PaymentHistory[]
+  id                 String           @id @default(uuid())
+  planId             String
+  monthlyPrice       Float
+  status             String
+  limitQuestions     Int
+  extraResponsePrice Float
+  startDate          DateTime
+  endDate            DateTime
+  User               User[]
+  PaymentHistory     PaymentHistory[]
 }
 
 model PaymentHistory {
