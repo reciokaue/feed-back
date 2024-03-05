@@ -68,6 +68,7 @@ export async function formRoutes(app: FastifyInstance) {
         name,
         about,
         topic,
+        active: false,
         userId: user.sub,
       },
     })

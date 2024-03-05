@@ -48,7 +48,7 @@ export async function questionRoutes(app: FastifyInstance) {
         const newQuestion = await prisma.question.create({
           data: {
             formId,
-            IsCustom: true,
+            isDefault: false,
             type,
             text,
             topic,
@@ -99,7 +99,7 @@ export async function questionRoutes(app: FastifyInstance) {
         text,
         formId,
         type: questionType,
-        IsCustom: true,
+        isDefault: false,
         topic,
         options: {
           create: responses.map((response) => {
