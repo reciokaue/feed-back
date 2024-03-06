@@ -19,7 +19,9 @@ export async function formRoutes(app: FastifyInstance) {
 
     const form = await prisma.form.findMany({
       orderBy: { id: 'asc' },
-      where: { userId: user.sub },
+      where: {
+        userId: user.sub,
+      },
       include: { _count: true },
     })
 

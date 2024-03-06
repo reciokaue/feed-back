@@ -35,33 +35,60 @@ GET
 "/question:questionId/answer"
 
 # Use Cases
+# Backend do projeto FeedbackView
 
-### User
+## Tecnologias
 
-- Crud User
-- Login
-- Forgot password
+- NodeJS
+- Fastify
+- Prisma ORM
+
+# Routes
+
+GET
+"/form"
+"/form:formId"
+"/question"
+"/question:questionId/answer"
+
+# Use Cases
+
+
+# Auth
+  - [x] Login
+  - [x] Register
+  - [ ] Forgot Password
+
+# User
+  - [x] Get All
+  - [ ] Get One
+  - [ ] Delete account
+  - [ ] Edit name/password
 
 ### Form
 
-- Read form and all questions
-- Create form
-- Update form 
-- Delete form -> delete all questions
-- Add multiple questions -> create questions
-- Remove question -> delete question
-
-### Question
-
-- Read question and all options
-- Create question
-- Update question 
-- Delete question
-- Add option
-- Remove option
-- Update option
+[] get all forms of user
+ - pagination 
+ - not include questions
+[ ] get one form
+ - no auth
+ - include questions
+ - no sensive data
+[ ] Create new form
+- with questions if has
+[] Edit form
+- and all questions
+[] delete form
+ - all questions should be deleted too
 
 ### Answer 
+
+Session ID for answers it helps to identify all answers of a single user
+
+
+[] answer one question
+[] answer entire form
+
 
 - Read answer
 - Answer form
@@ -73,5 +100,3 @@ GET
 
 - Generate graph data for all form answers
 - Generate graph data for question answers
-
-

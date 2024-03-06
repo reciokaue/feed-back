@@ -3,9 +3,14 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
+
+// datasource db {
+//   provider = "sqlite"
+//   url      = "file:./dev.db"
+// }
 
 generator erd {
   provider                  = "prisma-erd-generator"
@@ -16,14 +21,14 @@ generator erd {
 }
 
 model Form {
-  id         String     @id @default(uuid())
+  id         String     @id @default(auto()) @map("_id") @db.ObjectId
   name       String
   about      String?
   active     Boolean
   isDefault  Boolean    @default(false) // Define se é padrão ou personalizada
   createdAt  DateTime   @default(now())
   endedAt    DateTime?
-  userId     String // Chave estrangeira para o User
+  userId     String     @db.ObjectId // Chave estrangeira para o User
   user       User       @relation(fields: [userId], references: [id])
   topic      String // Chave estrangeira para o Topic
   topicModel Topic      @relation(fields: [topic], references: [name])
@@ -33,27 +38,27 @@ model Form {
 }
 
 model User {
-  id             String        @id @default(uuid())
-  name           String
-  email          String        @unique
-  password       String
-  forms          Form[] // Um usuário pode ter vários formulários
-  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
-  subscriptionId String?
-  eventLogs      EventLog[]
-  cards          CreditCard[]
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  email    String @unique
+  password String
+  forms    Form[] // Um usuário pode ter vários formulários
+  // subscriptionId String?       @db.ObjectId
+  // subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  // eventLogs      EventLog[]
+  // cards          CreditCard[]
 }
 
 model QuestionType {
-  id        String     @id @default(uuid())
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
   type      String
   questions Question[]
 }
 
 model Question {
-  id             String        @id @default(uuid())
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
   text           String
-  formId         String
+  formId         String        @db.ObjectId
   isDefault      Boolean       @default(false) // Define se é padrão ou personalizada
   form           Form          @relation(fields: [formId], references: [id])
   type           String // Pode ser 'text', 'number', 'image', etc.
@@ -62,71 +67,72 @@ model Question {
   options        Option[]
   Answer         Answer[]
   QuestionType   QuestionType? @relation(fields: [questionTypeId], references: [id])
-  questionTypeId String?
+  questionTypeId String?       @db.ObjectId
 }
 
 model Option {
-  id         String   @id @default(uuid())
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
   text       String
   value      Int // 1 to 10
-  questionId String
+  questionId String   @db.ObjectId
   question   Question @relation(fields: [questionId], references: [id])
   Answer     Answer[]
 }
 
 model Topic {
-  name     String     @id @unique
+  id       String     @id @default(auto()) @map("_id") @db.ObjectId
+  name     String     @unique
   Form     Form[]
   Question Question[]
 }
 
 model Answer {
-  id         String   @id @default(uuid())
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
   value      String // Text or ID of the option
-  questionId String
+  questionId String   @db.ObjectId
   createdAt  DateTime @default(now())
   question   Question @relation(fields: [questionId], references: [id])
-  formId     String
+  formId     String   @db.ObjectId
   form       Form     @relation(fields: [formId], references: [id])
-  optionId   String?
+  optionId   String?  @db.ObjectId
   option     Option?  @relation(fields: [optionId], references: [id])
 }
 
-model Subscription {
-  id                 String           @id @default(uuid())
-  planId             String
-  monthlyPrice       Float
-  status             String
-  limitQuestions     Int
-  extraResponsePrice Float
-  startDate          DateTime
-  endDate            DateTime
-  User               User[]
-  PaymentHistory     PaymentHistory[]
-}
+// model Subscription {
+//   id                 String           @id @default(auto()) @map("_id") @db.ObjectId
+//   planId             String
+//   monthlyPrice       Float
+//   status             String
+//   limitQuestions     Int
+//   extraResponsePrice Float
+//   startDate          DateTime
+//   endDate            DateTime
+//   User               User[]
+//   PaymentHistory     PaymentHistory[]
+// }
 
-model PaymentHistory {
-  id             String       @id @default(uuid())
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
-  date           DateTime
-  value          Float
-  status         String // Status do pagamento (aprovado, pendente, falha, etc)
-  subscriptionId String
-}
+// model PaymentHistory {
+//   id             String       @id @default(auto()) @map("_id") @db.ObjectId
+//   subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+//   date           DateTime
+//   value          Float
+//   status         String // Status do pagamento (aprovado, pendente, falha, etc)
+//   subscriptionId String
+// }
 
-model CreditCard {
-  id             String   @id @default(uuid())
-  cardNumber     String
-  expirationDate DateTime
-  cvv            String
-  cardType       String
-  userId         String // Chave estrangeira para o User
-  user           User     @relation(fields: [userId], references: [id])
-}
+// model CreditCard {
+//   id             String   @id @default(auto()) @map("_id") @db.ObjectId
+//   cardNumber     String
+//   expirationDate DateTime
+//   cvv            String
+//   cardType       String
+//   userId         String // Chave estrangeira para o User
+//   user           User     @relation(fields: [userId], references: [id])
+// }
 
-model EventLog {
-  id          String @id @default(uuid())
-  user        User   @relation(fields: [userId], references: [id])
-  description String //Descrição do evento (por exemplo, "Criação de Assinatura", "Cancelamento de Assinatura")
-  userId      String
-}
+// model EventLog {
+//   id          String @id @default(auto()) @map("_id") @db.ObjectId
+//   user        User   @relation(fields: [userId], references: [id])
+//   description String //Descrição do evento (por exemplo, "Criação de Assinatura", "Cancelamento de Assinatura")
+//   userId      String
+// }

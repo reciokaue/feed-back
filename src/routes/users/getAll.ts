@@ -14,10 +14,10 @@ export async function getUsers(app: FastifyInstance) {
   app.get('/users', async (request) => {
     const paramsSchema = z.object({
       page: z.number().default(0),
-      pageSize: z.number().default(15)
+      pageSize: z.number().default(15),
     })
     const { page, pageSize } = paramsSchema.parse(request.params)
-    
+
     const questions = await prisma.user.findMany({
       take: pageSize,
       skip: page * pageSize,

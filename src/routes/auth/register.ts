@@ -24,6 +24,7 @@ export async function registerRoute(app: FastifyInstance) {
         },
       })
       .catch((e) => {
+        console.log(e)
         return reply
           .status(statusCode.badRequest)
           .send(statusMessage.emailAlreadyExistis)
