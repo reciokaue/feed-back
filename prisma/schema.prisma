@@ -3,14 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
-
-// datasource db {
-//   provider = "sqlite"
-//   url      = "file:./dev.db"
-// }
 
 generator erd {
   provider                  = "prisma-erd-generator"
@@ -21,85 +16,86 @@ generator erd {
 }
 
 model Form {
-  id         String     @id @default(auto()) @map("_id") @db.ObjectId
-  name       String
-  about      String?
-  active     Boolean
-  isDefault  Boolean    @default(false) // Define se é padrão ou personalizada
-  createdAt  DateTime   @default(now())
-  endedAt    DateTime?
-  userId     String     @db.ObjectId // Chave estrangeira para o User
-  user       User       @relation(fields: [userId], references: [id])
-  topic      String // Chave estrangeira para o Topic
-  topicModel Topic      @relation(fields: [topic], references: [name])
-  questions  Question[]
-  answers    Answer[]
-  logoUrl    String?
+  id        String    @id @default(uuid())
+  name      String
+  about     String?
+  active    Boolean   @default(false)
+  topic     String // Chave estrangeira para o Topic
+  logoUrl   String?
+  isDefault Boolean   @default(false) // Define se é padrão ou personalizada
+  createdAt DateTime  @default(now())
+  endedAt   DateTime?
+
+  userId    String // Chave estrangeira para o User
+  user      User       @relation(fields: [userId], references: [id])
+  questions Question[]
+  answers   Answer[]
+  Sessions  Session[]
 }
 
 model User {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  id       String @id @default(uuid())
   name     String
   email    String @unique
   password String
   forms    Form[] // Um usuário pode ter vários formulários
-  // subscriptionId String?       @db.ObjectId
   // subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  // subscriptionId String?
   // eventLogs      EventLog[]
   // cards          CreditCard[]
 }
 
-model QuestionType {
-  id        String     @id @default(auto()) @map("_id") @db.ObjectId
-  type      String
-  questions Question[]
-}
-
 model Question {
-  id             String        @id @default(auto()) @map("_id") @db.ObjectId
-  text           String
-  formId         String        @db.ObjectId
-  isDefault      Boolean       @default(false) // Define se é padrão ou personalizada
-  form           Form          @relation(fields: [formId], references: [id])
-  type           String // Pode ser 'text', 'number', 'image', etc.
-  topic          String // Chave estrangeira para o Topic
-  topicModel     Topic         @relation(fields: [topic], references: [name])
-  options        Option[]
-  Answer         Answer[]
-  QuestionType   QuestionType? @relation(fields: [questionTypeId], references: [id])
-  questionTypeId String?       @db.ObjectId
+  id        String  @id @default(uuid())
+  text      String
+  isDefault Boolean @default(false) // Define se é padrão ou personalizada
+  type      String // Pode ser 'text', 'number', 'image', etc.
+  topic     String // Chave estrangeira para o Topic
+
+  form   Form   @relation(fields: [formId], references: [id])
+  formId String
+
+  options Option[]
+  Answer  Answer[]
 }
 
 model Option {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  id         String   @id @default(uuid())
   text       String
   value      Int // 1 to 10
-  questionId String   @db.ObjectId
+  questionId String
   question   Question @relation(fields: [questionId], references: [id])
-  Answer     Answer[]
 }
 
-model Topic {
-  id       String     @id @default(auto()) @map("_id") @db.ObjectId
-  name     String     @unique
-  Form     Form[]
-  Question Question[]
+model Session {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  answers   Answer[]
+  Form      Form?    @relation(fields: [formId], references: [id])
+  formId    String?
 }
 
 model Answer {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  id         String   @id @default(uuid())
   value      String // Text or ID of the option
-  questionId String   @db.ObjectId
-  createdAt  DateTime @default(now())
+  questionId String
   question   Question @relation(fields: [questionId], references: [id])
-  formId     String   @db.ObjectId
+  formId     String
   form       Form     @relation(fields: [formId], references: [id])
-  optionId   String?  @db.ObjectId
-  option     Option?  @relation(fields: [optionId], references: [id])
+  Session    Session? @relation(fields: [sessionId], references: [id])
+  sessionId  String?
+}
+
+model Topic {
+  name String @id @unique
+}
+
+model QuestionType {
+  type String @id @unique
 }
 
 // model Subscription {
-//   id                 String           @id @default(auto()) @map("_id") @db.ObjectId
+//   id                 String           @id @default(uuid())
 //   planId             String
 //   monthlyPrice       Float
 //   status             String
@@ -112,7 +108,7 @@ model Answer {
 // }
 
 // model PaymentHistory {
-//   id             String       @id @default(auto()) @map("_id") @db.ObjectId
+//   id             String       @id @default(uuid())
 //   subscription   Subscription @relation(fields: [subscriptionId], references: [id])
 //   date           DateTime
 //   value          Float
@@ -121,7 +117,7 @@ model Answer {
 // }
 
 // model CreditCard {
-//   id             String   @id @default(auto()) @map("_id") @db.ObjectId
+//   id             String   @id @default(uuid())
 //   cardNumber     String
 //   expirationDate DateTime
 //   cvv            String
@@ -131,7 +127,7 @@ model Answer {
 // }
 
 // model EventLog {
-//   id          String @id @default(auto()) @map("_id") @db.ObjectId
+//   id          String @id @default(uuid())
 //   user        User   @relation(fields: [userId], references: [id])
 //   description String //Descrição do evento (por exemplo, "Criação de Assinatura", "Cancelamento de Assinatura")
 //   userId      String

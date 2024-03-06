@@ -61,30 +61,30 @@ GET
 
 # User
   - [x] Get All
-  - [ ] Get One
+  - [x] Get One
   - [ ] Delete account
   - [ ] Edit name/password
 
 ### Form
 
-[] get all forms of user
+-create form
+- [] get all forms of user
  - pagination 
  - not include questions
-[ ] get one form
+- [] get one form
  - no auth
  - include questions
  - no sensive data
-[ ] Create new form
+- [] Create new form
 - with questions if has
-[] Edit form
+-[] Edit form
 - and all questions
-[] delete form
+-[] delete form
  - all questions should be deleted too
 
 ### Answer 
 
 Session ID for answers it helps to identify all answers of a single user
-
 
 [] answer one question
 [] answer entire form
