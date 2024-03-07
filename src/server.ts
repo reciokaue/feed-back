@@ -4,7 +4,6 @@ import fastify from 'fastify'
 import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
 
-import { formRoutes } from './routes/form'
 import { questionRoutes } from './routes/question'
 import { topicRoutes } from './routes/topic'
 import { questionTypeRoutes } from './routes/questionType'

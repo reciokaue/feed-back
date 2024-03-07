@@ -68,7 +68,7 @@ GET
 ### Form
 
 -create form
-- [] get all forms of user
+- [x] get all forms of user
  - pagination 
  - not include questions
 - [] get one form

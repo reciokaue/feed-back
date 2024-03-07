@@ -15,26 +15,26 @@ export async function createForm(app: FastifyInstance) {
   })
   app.post('/form', async (request, reply) => {
     const user = request.user as jwtUser
-    let validatedData
 
-    try {
-      validatedData = FormSchema.parse(request.body)
-      validatedData.userId = user.sub
-      console.log(validatedData)
-    } catch (e) {
-      reply.send('Dados inválidos')
+    const validated = FormSchema.safeParse(request.body)
+    if (!validated.success) {
+      return reply.status(statusCode.badRequest).send('Invalid parameters')
     }
+    validated.data.userId = user.sub
 
     const topicExistis = await prisma.topic.findUnique({
       where: {
-        name: validatedData.topic,
+        name: validated.data.topic,
       },
     })
+    console.log(topicExistis)
     if (!topicExistis)
       return reply.status(statusCode.notFound).send(statusMessage.topicNotFound)
 
+    console.log(JSON.stringify(validated.data))
+
     const form = await prisma.form.create({
-      data: validatedData,
+      data: validated.data,
     })
 
     return form

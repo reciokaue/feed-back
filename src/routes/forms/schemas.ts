@@ -12,7 +12,14 @@ export const QuestionSchema = z.object({
   isDefault: z.boolean().optional(),
   type: z.string(),
   topic: z.string(),
-  options: z.array(OptionSchema).optional(),
+  options: z
+    .array(OptionSchema)
+    .optional()
+    .transform((options) => {
+      return {
+        create: options,
+      }
+    }),
 })
 
 export const FormSchema = z.object({
@@ -26,5 +33,12 @@ export const FormSchema = z.object({
   userId: z.string().nullable().optional(),
   topic: z.string(),
   logoUrl: z.string().nullable().optional(),
-  questions: z.array(QuestionSchema).optional(),
+  questions: z
+    .array(QuestionSchema)
+    .optional()
+    .transform((questions) => {
+      return {
+        create: questions,
+      }
+    }),
 })
