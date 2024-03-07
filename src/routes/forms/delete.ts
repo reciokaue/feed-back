@@ -12,20 +12,23 @@ export async function deleteForm(app: FastifyInstance) {
     }
   })
 
-  app.delete('/form/:id', async (request) => {
+  app.delete('/form/:formId', async (request) => {
     const paramsSchema = z.object({
-      id: z.string().uuid(),
+      formId: z.string().uuid(),
     })
-    const { id } = paramsSchema.parse(request.params)
+    const { formId } = paramsSchema.parse(request.params)
 
     const form = await prisma.form.findUniqueOrThrow({
       where: {
-        id,
+        id: formId,
       },
     })
+    console.log(form)
 
     await prisma.form.delete({
-      where: { id },
+      where: {
+        id: formId,
+      },
     })
     return form
   })

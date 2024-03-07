@@ -32,7 +32,7 @@ model Form {
   endedAt   DateTime?
 
   userId    String // Chave estrangeira para o User
-  user      User       @relation(fields: [userId], references: [id])
+  user      User       @relation(fields: [userId], references: [id], onDelete: NoAction)
   questions Question[]
   answers   Answer[]
   Sessions  Session[]
@@ -57,7 +57,7 @@ model Question {
   type      String // Pode ser 'text', 'number', 'image', etc.
   topic     String // Chave estrangeira para o Topic
 
-  form   Form   @relation(fields: [formId], references: [id])
+  form   Form   @relation(fields: [formId], references: [id], onDelete: Cascade)
   formId String
 
   options Option[]
@@ -69,14 +69,14 @@ model Option {
   text       String
   value      Int // 1 to 10
   questionId String
-  question   Question @relation(fields: [questionId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
 model Session {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   answers   Answer[]
-  Form      Form?    @relation(fields: [formId], references: [id])
+  Form      Form?    @relation(fields: [formId], references: [id], onDelete: NoAction)
   formId    String?
 }
 
@@ -84,10 +84,10 @@ model Answer {
   id         String   @id @default(uuid())
   value      String // Text or ID of the option
   questionId String
-  question   Question @relation(fields: [questionId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   formId     String
-  form       Form     @relation(fields: [formId], references: [id])
-  Session    Session? @relation(fields: [sessionId], references: [id])
+  form       Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  Session    Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId  String?
 }
 

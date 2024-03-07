@@ -71,15 +71,15 @@ GET
 - [x] get all forms of user
  - pagination 
  - not include questions
-- [] get one form
+- [x] get one form
  - no auth
  - include questions
  - no sensive data
-- [] Create new form
+- [x] Create new form
 - with questions if has
--[] Edit form
+-[x] Edit form
 - and all questions
--[] delete form
+-[x] delete form
  - all questions should be deleted too
 
 ### Answer 
