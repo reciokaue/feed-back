@@ -27,7 +27,6 @@ export async function createForm(app: FastifyInstance) {
         name: validated.data.topic,
       },
     })
-    console.log(topicExistis)
     if (!topicExistis)
       return reply.status(statusCode.notFound).send(statusMessage.topicNotFound)
 

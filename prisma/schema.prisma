@@ -2,15 +2,15 @@ generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-
 // datasource db {
-//   provider = "sqlite"
-//   url      = "file:./dev.db"
+//   provider = "mysql"
+//   url      = env("DATABASE_URL")
 // }
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
 
 generator erd {
   provider                  = "prisma-erd-generator"
@@ -25,17 +25,18 @@ model Form {
   name      String
   about     String?
   active    Boolean   @default(false)
-  topic     String // Chave estrangeira para o Topic
   logoUrl   String?
-  isDefault Boolean   @default(false) // Define se é padrão ou personalizada
+  isPublic  Boolean   @default(false) // Define se é padrão ou personalizada
   createdAt DateTime  @default(now())
   endedAt   DateTime?
 
-  userId    String // Chave estrangeira para o User
-  user      User       @relation(fields: [userId], references: [id], onDelete: NoAction)
+  userId String? // Chave estrangeira para o User
+  user   User?   @relation(fields: [userId], references: [id], onDelete: NoAction)
+
   questions Question[]
   answers   Answer[]
-  Sessions  Session[]
+  sessions  Session[]
+  topics    Topic[]
 }
 
 model User {
@@ -51,23 +52,24 @@ model User {
 }
 
 model Question {
-  id        String  @id @default(uuid())
-  text      String
-  isDefault Boolean @default(false) // Define se é padrão ou personalizada
-  type      String // Pode ser 'text', 'number', 'image', etc.
-  topic     String // Chave estrangeira para o Topic
+  id       String  @id @default(uuid())
+  text     String
+  isPublic Boolean @default(false) // Define se é padrão ou personalizada
+  type     String // Pode ser 'text', 'number', 'image', etc.
 
-  form   Form   @relation(fields: [formId], references: [id], onDelete: Cascade)
-  formId String
+  form   Form?   @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId String?
 
   options Option[]
-  Answer  Answer[]
+  answer  Answer[]
+  topics  Topic[]
 }
 
 model Option {
   id         String   @id @default(uuid())
   text       String
   value      Int // 1 to 10
+  emoji      String?
   questionId String
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
@@ -92,48 +94,7 @@ model Answer {
 }
 
 model Topic {
-  name String @id @unique
+  name     String     @id @unique
+  form     Form[]
+  question Question[]
 }
-
-model QuestionType {
-  type String @id @unique
-}
-
-// model Subscription {
-//   id                 String           @id @default(uuid())
-//   planId             String
-//   monthlyPrice       Float
-//   status             String
-//   limitQuestions     Int
-//   extraResponsePrice Float
-//   startDate          DateTime
-//   endDate            DateTime
-//   User               User[]
-//   PaymentHistory     PaymentHistory[]
-// }
-
-// model PaymentHistory {
-//   id             String       @id @default(uuid())
-//   subscription   Subscription @relation(fields: [subscriptionId], references: [id])
-//   date           DateTime
-//   value          Float
-//   status         String // Status do pagamento (aprovado, pendente, falha, etc)
-//   subscriptionId String
-// }
-
-// model CreditCard {
-//   id             String   @id @default(uuid())
-//   cardNumber     String
-//   expirationDate DateTime
-//   cvv            String
-//   cardType       String
-//   userId         String // Chave estrangeira para o User
-//   user           User     @relation(fields: [userId], references: [id])
-// }
-
-// model EventLog {
-//   id          String @id @default(uuid())
-//   user        User   @relation(fields: [userId], references: [id])
-//   description String //Descrição do evento (por exemplo, "Criação de Assinatura", "Cancelamento de Assinatura")
-//   userId      String
-// }

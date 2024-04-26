@@ -17,13 +17,21 @@ export async function getAllForms(app: FastifyInstance) {
   app.get('/form', async (request) => {
     const user = request.user as jwtUser
 
-    const { page, pageSize, isDefault } = paginationSchema.parse(request.query)
-    console.log(request.query)
-    console.log(page, pageSize, isDefault)
+    const { page, pageSize, isDefault, query } = paginationSchema.parse(
+      request.query,
+    )
 
     const forms = await prisma.form.findMany({
       where: {
         ...(!isDefault && { userId: user.sub }),
+        ...(query !== '' && {
+          name: {
+            contains: query,
+          },
+          about: {
+            contains: query,
+          },
+        }),
         isDefault,
       },
       include: { _count: true },

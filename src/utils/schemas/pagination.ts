@@ -13,4 +13,5 @@ export const paginationSchema = z.object({
     .string()
     .transform((val) => val.toLowerCase() === 'true')
     .default('false'),
+  query: z.string().default(''),
 })
