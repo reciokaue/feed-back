@@ -8,20 +8,18 @@ import { topicRoutes } from './routes/topic'
 import { questionTypeRoutes } from './routes/questionType'
 import { getUsers } from './routes/users/getAll'
 
-import { loginRoute } from './routes/auth/login'
-import { registerRoute } from './routes/auth/register'
 import { getOneUser } from './routes/users/getOne'
 import { createForm } from './routes/forms/create'
 import { editForm } from './routes/forms/edit'
 import { deleteForm } from './routes/forms/delete'
 import { getAllForms } from './routes/forms/getAll'
 import { getOneForm } from './routes/forms/getOne'
+import { authRoutes } from './routes/auth'
 
 const app = fastify()
 
 // auth routes
-app.register(loginRoute)
-app.register(registerRoute)
+app.register(authRoutes)
 
 // form routes
 app.register(createForm)
