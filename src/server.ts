@@ -2,7 +2,6 @@ import 'dotenv/config'
 
 import fastify from 'fastify'
 import cors from '@fastify/cors'
-import jwt from '@fastify/jwt'
 
 import { questionRoutes } from './routes/question'
 import { topicRoutes } from './routes/topic'
@@ -39,7 +38,6 @@ app.register(questionTypeRoutes)
 app.register(getUsers)
 app.register(getOneUser)
 
-app.register(jwt, { secret: 'B9S1G094LXL' })
 app.register(cors, { origin: true })
 
 app.listen({ port: 3333, host: '0.0.0.0' }).then(() => {
