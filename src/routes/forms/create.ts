@@ -1,20 +1,15 @@
 import { FastifyInstance } from 'fastify'
 import { statusMessage } from '../../utils/statusMessage'
-import { jwtUser } from '../../types/jwtUser'
 import { prisma } from '../../lib/prisma'
 import { statusCode } from '../../utils/statusCode'
 import { FormSchema } from './schemas'
+import { verifyJwt } from '../../middlewares/JWTAuth'
 
 export async function createForm(app: FastifyInstance) {
-  app.addHook('onRequest', async (request, reply) => {
-    try {
-      await request.jwtVerify()
-    } catch (err) {
-      reply.send(statusMessage.notVerified)
-    }
-  })
+  app.addHook('onRequest', verifyJwt)
+
   app.post('/form', async (request, reply) => {
-    const user = request.user as jwtUser
+    const user = request.user
 
     const validated = FormSchema.safeParse(request.body)
     if (!validated.success) {

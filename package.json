@@ -19,12 +19,14 @@
     "bcrypt": "^5.1.1",
     "dotenv": "^16.3.1",
     "fastify": "^4.23.1",
+    "jsonwebtoken": "^9.0.2",
     "zod": "^3.22.2"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^10.4.0",
     "@rocketseat/eslint-config": "^2.1.0",
     "@types/bcrypt": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.6.0",
     "eslint": "^8.49.0",
     "prisma": "^5.3.0",
