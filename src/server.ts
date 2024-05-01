@@ -5,31 +5,18 @@ import cors from '@fastify/cors'
 
 import { questionRoutes } from './routes/question'
 import { topicRoutes } from './routes/topic'
-import { questionTypeRoutes } from './routes/questionType'
-
-import { createForm } from './routes/forms/create'
-import { editForm } from './routes/forms/edit'
-import { deleteForm } from './routes/forms/delete'
-import { getAllForms } from './routes/forms/getAll'
-import { getOneForm } from './routes/forms/getOne'
 import { authRoutes } from './routes/auth'
 import { userRoutes } from './routes/user'
+import { formRoutes } from './routes/form'
 
 const app = fastify()
 
 app.register(authRoutes)
 app.register(userRoutes)
-
-// form routes
-app.register(createForm)
-app.register(deleteForm)
-app.register(editForm)
-app.register(getAllForms)
-app.register(getOneForm)
+app.register(formRoutes)
 
 app.register(questionRoutes)
 app.register(topicRoutes)
-app.register(questionTypeRoutes)
 
 app.register(cors, { origin: true })
 

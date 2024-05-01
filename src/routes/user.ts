@@ -1,26 +1,20 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
-import { verifyJwt } from '../middlewares/JWTAuth'
+import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
+import { verifyAccessLevel } from '../middlewares/accessLevel'
 
 export async function userRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
-  app.get('/users', async (request: any, reply) => {
+  app.get('/users', async (request: jwtRequest, reply) => {
+    verifyAccessLevel(request, reply)
+
     const paramsSchema = z.object({
       page: z.number().default(0),
       pageSize: z.number().default(15),
     })
     const { page, pageSize } = paramsSchema.parse(request.params)
-
-    const userExists = await prisma.user.findUniqueOrThrow({
-      where: { id: request?.user?.sub },
-    })
-
-    if (userExists.accessLevel === 0)
-      return reply
-        .status(400)
-        .send({ message: "You don't have access level do to it" })
 
     const users = await prisma.user.findMany({
       take: pageSize,

@@ -1,33 +1,23 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
-import { statusMessage } from '../utils/statusMessage'
-import { statusCode } from '../utils/statusCode'
-import { jwtUser } from '../types/jwtUser'
+import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
+import { FormSchema } from '../utils/schemas/form'
 
 export async function formRoutes(app: FastifyInstance) {
-  app.addHook('onRequest', async (request, reply) => {
-    try {
-      await request.jwtVerify()
-    } catch (err) {
-      reply.send(statusMessage.notVerified)
-    }
-  })
+  app.addHook('onRequest', verifyJwt)
 
-  app.get('/form', async (request) => {
-    const user = request.user as jwtUser
+  app.get('/forms', async (request: jwtRequest) => {
+    const user = request.user
 
     const form = await prisma.form.findMany({
-      orderBy: { id: 'asc' },
-      where: {
-        userId: user.sub,
-      },
-      include: { _count: true },
+      where: { userId: user?.sub },
+      include: { topics: true, _count: true },
     })
 
     return form
   })
-  app.get('/form/:id', async (request, reply) => {
+  app.get('/form/:id', async (request) => {
     const paramsSchema = z.object({
       id: z.string().uuid(),
     })
@@ -37,6 +27,7 @@ export async function formRoutes(app: FastifyInstance) {
     const form = await prisma.form.findUniqueOrThrow({
       where: { id },
       include: {
+        topics: true,
         questions: {
           include: {
             options: true,
@@ -47,5 +38,11 @@ export async function formRoutes(app: FastifyInstance) {
     })
 
     return form
+  })
+
+  app.post('/form', async (request, reply) => {
+    const form = FormSchema.parseAsync(request.params)
+
+    reply.status(200).send(form)
   })
 }

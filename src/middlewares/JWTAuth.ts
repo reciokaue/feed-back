@@ -1,11 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { FastifyReply } from 'fastify'
+import { FastifyReply, FastifyRequest } from 'fastify'
 import jwt from 'jsonwebtoken'
 import { jwtUser } from '../types/jwtUser'
 
 const secret = process.env.SECRET || ''
 
-export async function verifyJwt(request: any, reply: FastifyReply) {
+export interface jwtRequest extends FastifyRequest {
+  user?: jwtUser
+}
+
+export async function verifyJwt(
+  request: jwtRequest | any,
+  reply: FastifyReply,
+) {
   try {
     const bearerHeader = request.headers.authorization
     const token =

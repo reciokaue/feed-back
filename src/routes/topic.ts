@@ -1,47 +1,60 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
+import { paginationSchema } from '../utils/schemas/pagination'
+import { verifyJwt } from '../middlewares/JWTAuth'
 
 export async function topicRoutes(app: FastifyInstance) {
-  app.get('/topic', async (request) => {
-    const bodySchema = z.object({ q: z.string().nullable() })
-    const { q } = bodySchema.parse(request.query)
+  app.addHook('onRequest', verifyJwt)
 
-    const topic = await prisma.topic.findMany({
-      orderBy: {
-        name: 'asc',
-      },
+  app.get('/topics', async (request) => {
+    const { page, pageSize, query } = paginationSchema.parse(request.params)
+
+    const topics = await prisma.topic.findMany({
       where: {
-        name: { contains: q || undefined },
+        ...(query && {
+          name: { contains: query },
+        }),
       },
+      take: pageSize,
+      skip: pageSize * page,
     })
+    const formatedTopics = topics.map((topic) => topic.name)
 
-    return topic
+    return formatedTopics
   })
-  app.post('/topic', async (request) => {
-    const bodySchema = z.object({
-      name: z.string(),
-    })
-    const { name } = bodySchema.parse(request.body)
-    const topic = await prisma.topic.create({
-      data: { name },
-    })
+  app.post('/topics', async (request) => {
+    const bodySchema = z.array(z.string())
+    const topics = bodySchema.parse(request.body)
 
-    return topic
+    if (topics.length === 0)
+      return Response.json({ message: 'missing data' }, { status: 400 })
+
+    async function addTopic(topic: string) {
+      try {
+        await prisma.topic.create({
+          data: { name: topic },
+        })
+      } catch (e) {}
+    }
+
+    await Promise.all(
+      topics.map((topic: string) => {
+        return addTopic(topic)
+      }),
+    )
   })
-  app.delete('/topic/:name', async (request) => {
-    const paramsSchema = z.object({
-      name: z.string(),
-    })
-    const { name } = paramsSchema.parse(request.params)
-    const topic = await prisma.topic.findUniqueOrThrow({
+  app.delete('/topics', async (request) => {
+    const bodySchema = z.array(z.string())
+    const topics = bodySchema.parse(request.body)
+
+    if (topics.length === 0)
+      return Response.json({ message: 'missing data' }, { status: 400 })
+
+    await prisma.topic.deleteMany({
       where: {
-        name,
+        name: { in: topics },
       },
     })
-    await prisma.topic.delete({
-      where: { name },
-    })
-    return topic
   })
 }
