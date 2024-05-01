@@ -40,11 +40,12 @@ model Form {
 }
 
 model User {
-  id       String @id @default(uuid())
-  name     String
-  email    String @unique
-  password String
-  forms    Form[] // Um usuário pode ter vários formulários
+  id          String @id @default(uuid())
+  name        String
+  email       String @unique
+  password    String
+  accessLevel Int    @default(0)
+  forms       Form[] // Um usuário pode ter vários formulários
   // subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
   // subscriptionId String?
   // eventLogs      EventLog[]

@@ -6,20 +6,19 @@ import cors from '@fastify/cors'
 import { questionRoutes } from './routes/question'
 import { topicRoutes } from './routes/topic'
 import { questionTypeRoutes } from './routes/questionType'
-import { getUsers } from './routes/users/getAll'
 
-import { getOneUser } from './routes/users/getOne'
 import { createForm } from './routes/forms/create'
 import { editForm } from './routes/forms/edit'
 import { deleteForm } from './routes/forms/delete'
 import { getAllForms } from './routes/forms/getAll'
 import { getOneForm } from './routes/forms/getOne'
 import { authRoutes } from './routes/auth'
+import { userRoutes } from './routes/user'
 
 const app = fastify()
 
-// auth routes
 app.register(authRoutes)
+app.register(userRoutes)
 
 // form routes
 app.register(createForm)
@@ -31,10 +30,6 @@ app.register(getOneForm)
 app.register(questionRoutes)
 app.register(topicRoutes)
 app.register(questionTypeRoutes)
-
-// Users
-app.register(getUsers)
-app.register(getOneUser)
 
 app.register(cors, { origin: true })
 
