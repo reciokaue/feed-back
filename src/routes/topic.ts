@@ -24,25 +24,15 @@ export async function topicRoutes(app: FastifyInstance) {
     return formatedTopics
   })
   app.post('/topics', async (request) => {
-    const bodySchema = z.array(z.string())
+    const bodySchema = z.array(z.string().toLowerCase())
     const topics = bodySchema.parse(request.body)
 
     if (topics.length === 0)
       return Response.json({ message: 'missing data' }, { status: 400 })
 
-    async function addTopic(topic: string) {
-      try {
-        await prisma.topic.create({
-          data: { name: topic },
-        })
-      } catch (e) {}
-    }
-
-    await Promise.all(
-      topics.map((topic: string) => {
-        return addTopic(topic)
-      }),
-    )
+    await prisma.topic.createMany({
+      data: topics.map((name) => ({ name })),
+    })
   })
   app.delete('/topics', async (request) => {
     const bodySchema = z.array(z.string())

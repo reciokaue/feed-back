@@ -3,6 +3,12 @@ import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import { verifyAccessLevel } from '../middlewares/accessLevel'
+import { userSchema } from '../utils/schemas/user'
+import bcrypt from 'bcrypt'
+
+const paramsSchema = z.object({
+  id: z.string().uuid(),
+})
 
 export async function userRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
@@ -23,16 +29,37 @@ export async function userRoutes(app: FastifyInstance) {
 
     return users
   })
-  app.get('/user/:id', async (request) => {
-    const paramsSchema = z.object({
-      id: z.string().uuid(),
-    })
+  app.get('/user/:id', async (request, reply) => {
     const { id } = paramsSchema.parse(request.params)
 
-    const user = await prisma.user.findUniqueOrThrow({
+    const user = await prisma.user.findUnique({
       where: { id },
     })
+    if (!user) return reply.status(404).send({ message: 'User not found' })
 
     return user
+  })
+  app.put('/user/:id', async (request, reply) => {
+    const { id } = paramsSchema.parse(request.params)
+    const user = userSchema.parse(request.body)
+
+    const userExists = await prisma.user.findUnique({
+      where: { id },
+    })
+    if (!userExists || id !== user.id)
+      return reply.status(404).send({ message: 'User not found' })
+
+    const hashedPassword =
+      user.password && (await bcrypt.hash(user?.password, 10))
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        ...user,
+        ...(user.password && { password: hashedPassword }),
+      },
+    })
+
+    return reply.send(updatedUser)
   })
 }

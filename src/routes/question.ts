@@ -1,20 +1,12 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
-import { statusMessage } from '../utils/statusMessage'
-import { jwtUser } from '../types/jwtUser'
+import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 
 export async function questionRoutes(app: FastifyInstance) {
-  app.addHook('onRequest', async (request, reply) => {
-    try {
-      await request.jwtVerify()
-    } catch (err) {
-      reply.send(statusMessage.notVerified)
-    }
-  })
+  app.addHook('onRequest', verifyJwt)
 
-  app.post('/form/:formId/question', async (request) => {
-    const user = request.user as jwtUser
+  app.post('/form/:formId/question', async (request: jwtRequest) => {
     const paramsSchema = z.object({
       formId: z.string().uuid(),
     })
@@ -33,9 +25,7 @@ export async function questionRoutes(app: FastifyInstance) {
     )
 
     const { formId } = paramsSchema.parse(request.params)
-    console.log(request.body)
     const questions = bodySchema.parse(request.body)
-    console.log(questions)
 
     const createdQuestions = await Promise.all(
       questions.map(async (question) => {
@@ -48,10 +38,10 @@ export async function questionRoutes(app: FastifyInstance) {
         const newQuestion = await prisma.question.create({
           data: {
             formId,
-            isDefault: false,
+            isPublic: false,
             type,
             text,
-            topic,
+            // topic,
             options: {
               create: optionsData,
             },
@@ -81,7 +71,7 @@ export async function questionRoutes(app: FastifyInstance) {
       text: z.string(),
       formId: z.string().uuid(),
       questionType: z.string(),
-      topic: z.string(),
+      topics: z.array(z.string()),
       responses: z.array(
         z.object({
           text: z.string(),
@@ -89,7 +79,7 @@ export async function questionRoutes(app: FastifyInstance) {
         }),
       ),
     })
-    const { text, formId, questionType, responses, topic } = bodySchema.parse(
+    const { text, formId, questionType, responses, topics } = bodySchema.parse(
       request.body,
     )
     console.log(responses)
@@ -99,8 +89,8 @@ export async function questionRoutes(app: FastifyInstance) {
         text,
         formId,
         type: questionType,
-        isDefault: false,
-        topic,
+        isPublic: false,
+        topics,
         options: {
           create: responses.map((response) => {
             return {
