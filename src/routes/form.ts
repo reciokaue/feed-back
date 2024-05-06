@@ -2,20 +2,34 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
-import { FormSchema } from '../utils/schemas/form'
+import {
+  FormSchemaForPrisma,
+  questionsSchemaForPrisma,
+} from '../utils/schemas/form'
+import { paginationSchema } from '../utils/schemas/pagination'
 
 export async function formRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
   app.get('/forms', async (request: jwtRequest) => {
-    const user = request.user
+    const { page, pageSize, query, isPublic } = paginationSchema.parse(
+      request.query,
+    )
 
-    const form = await prisma.form.findMany({
-      where: { userId: user?.sub },
-      include: { topics: true, _count: true },
+    const forms = await prisma.form.findMany({
+      where: {
+        ...(query && {
+          name: { contains: query },
+          about: { contains: query },
+        }),
+        ...(isPublic ? { isPublic: true } : { userId: request.user?.sub }),
+      },
+      take: pageSize,
+      skip: pageSize * page,
+      include: { _count: true },
     })
 
-    return form
+    return forms
   })
   app.get('/form/:id', async (request, reply) => {
     const paramsSchema = z.object({
@@ -40,42 +54,42 @@ export async function formRoutes(app: FastifyInstance) {
 
     return form
   })
-  app.post('/form', async (request, reply) => {
+  app.post('/form', async (request: jwtRequest, reply) => {
     try {
       const paramsSchema = z.object({
         baseFormId: z.string().uuid().optional(),
       })
 
-      const form = FormSchema.parse(request.body)
-      const { baseFormId } = paramsSchema.parse(request.params)
+      const form = FormSchemaForPrisma.parse(request.body)
+      const { baseFormId } = paramsSchema.parse(request.query)
+      form.userId = request.user?.sub
 
-      const newForm = await prisma.form.create({
-        data: form as any,
-      })
-
-      if (baseFormId) {
+      async function getBaseFormQuestions(id: string) {
         const baseForm = await prisma.form.findUnique({
-          where: { id: baseFormId },
+          where: { id },
           include: {
-            questions: true,
+            questions: {
+              include: {
+                options: true,
+              },
+            },
           },
         })
-        const promiseQuestions = baseForm?.questions
-          ? baseForm?.questions.map(async (question) => {
-              try {
-                await prisma.question.create({
-                  data: { ...question, formId: newForm.id } as any,
-                })
-              } catch (e) {
-                console.log(e)
-              }
-            })
-          : []
+        if (!baseForm)
+          reply.status(404).send({ message: 'Base form not found' })
 
-        await Promise.all(promiseQuestions)
+        return {
+          questions: questionsSchemaForPrisma.parse(baseForm?.questions),
+        }
       }
 
-      reply.status(200).send(form)
+      const newForm = await prisma.form.create({
+        data: {
+          ...form,
+          ...(baseFormId && (await getBaseFormQuestions(baseFormId))),
+        } as any,
+      })
+      reply.status(200).send(newForm)
     } catch (err) {
       console.log(err)
       return reply.status(400).send({ message: 'Invalid data', error: err })

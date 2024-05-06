@@ -9,7 +9,7 @@ export const paginationSchema = z.object({
     .string()
     .transform((val) => +val)
     .default('6'),
-  isDefault: z
+  isPublic: z
     .string()
     .transform((val) => val.toLowerCase() === 'true')
     .default('false'),

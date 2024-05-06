@@ -62,4 +62,19 @@ export async function userRoutes(app: FastifyInstance) {
 
     return reply.send(updatedUser)
   })
+  app.delete('/user/:id', async (request, reply) => {
+    const { id } = paramsSchema.parse(request.params)
+
+    const userExists = await prisma.user.findUnique({
+      where: { id },
+    })
+    if (!userExists)
+      return reply.status(404).send({ message: 'User not found' })
+
+    const deletedUser = await prisma.user.delete({
+      where: { id },
+    })
+
+    return reply.send(deletedUser)
+  })
 }

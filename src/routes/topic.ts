@@ -8,7 +8,7 @@ export async function topicRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
   app.get('/topics', async (request) => {
-    const { page, pageSize, query } = paginationSchema.parse(request.params)
+    const { page, pageSize, query } = paginationSchema.parse(request.query)
 
     const topics = await prisma.topic.findMany({
       where: {
