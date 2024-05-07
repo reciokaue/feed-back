@@ -25,7 +25,7 @@ export const FormSchema = z.object({
   createdAt: z.string().nullable().optional(),
   endedAt: z.string().nullable().optional(),
   userId: z.string().nullable().optional(),
-  topics: z.array(z.string()),
+  topics: z.array(z.string()).optional(),
   logoUrl: z.string().nullable().optional(),
   questions: z.array(QuestionSchema).optional(),
 })

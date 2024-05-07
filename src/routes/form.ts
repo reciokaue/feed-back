@@ -3,10 +3,15 @@ import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import {
+  FormSchema,
   FormSchemaForPrisma,
   questionsSchemaForPrisma,
 } from '../utils/schemas/form'
 import { paginationSchema } from '../utils/schemas/pagination'
+
+const paramsSchema = z.object({
+  id: z.string().uuid(),
+})
 
 export async function formRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
@@ -32,10 +37,6 @@ export async function formRoutes(app: FastifyInstance) {
     return forms
   })
   app.get('/form/:id', async (request, reply) => {
-    const paramsSchema = z.object({
-      id: z.string().uuid(),
-    })
-
     const { id } = paramsSchema.parse(request.params)
 
     const form = await prisma.form.findUnique({
@@ -94,5 +95,36 @@ export async function formRoutes(app: FastifyInstance) {
       console.log(err)
       return reply.status(400).send({ message: 'Invalid data', error: err })
     }
+  })
+  app.put('/form/:id', async (request: jwtRequest, reply) => {
+    const { id } = paramsSchema.parse(request.params)
+    const form = FormSchema.parse(request.body)
+
+    const formExists = await prisma.form.findUnique({
+      where: { id },
+    })
+    if (!formExists)
+      return reply.status(404).send({ message: 'Form not found' })
+
+    const updatedForm = await prisma.form.update({
+      where: { id },
+      data: form as any,
+    })
+
+    return updatedForm
+  })
+  app.delete('/form/:id', async (request, reply) => {
+    const { id } = paramsSchema.parse(request.params)
+
+    const form = await prisma.form.findUnique({
+      where: { id },
+    })
+    if (!form) return reply.status(404).send({ message: 'Form not found' })
+
+    await prisma.form.delete({
+      where: { id: form.id },
+    })
+
+    return form
   })
 }

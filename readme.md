@@ -1,102 +1,80 @@
-# Backend do projeto FeedbackView
+# FeedbackView - Backend
 
-## Tecnologias
+## Visão Geral
 
-- NodeJS
-- Fastify
-- Prisma ORM
+Este é o repositório do backend do projeto FeedbackView, um sistema de avaliação da satisfação do cliente desenvolvido pelo grupo composto por, Kauê Recio, Leonardo Marcel Hyppolito. O objetivo principal deste projeto é proporcionar uma maneira mais precisa de coletar e analisar dados referentes à satisfação do cliente em relação a produtos e/ou serviços.
 
-# Routes
+## Tecnologias Utilizadas
 
-### Auth
-- POST "/register" receives:
-  ```
-    {
-      "name": "Teste",
-      "email": "email@gmail.com",
-      "password": "Senha123"
-    }
-  ``` 
-  Return: token
+- Node.js
+- Express.js
+- MongoDB (ou outra base de dados relacional ou não-relacional)
+- Outras dependências conforme necessário
 
-- POST "/register" receives:
-  ```
-    {
-      "email": "email@gmail.com",
-	    "password": "Senha123"
-    }
-  ``` 
-  Return: token
+## Funcionalidades
 
-GET
-"/form"
-"/form:formId"
-"/question"
-"/question:questionId/answer"
+O sistema Feed-back oferece as seguintes funcionalidades:
 
-# Use Cases
-# Backend do projeto FeedbackView
+- Gerenciamento de formulários de avaliação.
+- Criação e edição de perguntas e formulários.
+- Personalização de formulários de acordo com as necessidades do usuário.
+- Geração de códigos QR e links de acesso para os formulários.
+- Armazenamento seguro de dados dos formulários e respostas dos usuários.
+- Apresentação de resultados das avaliações de forma clara e compreensível.
 
-## Tecnologias
+## Público-Alvo
 
-- NodeJS
-- Fastify
-- Prisma ORM
+- Gerentes de empresas de pequeno e médio porte que desejam conhecer melhor seus clientes.
+- Gerentes de empresas de pequeno e médio porte que desejam conhecer seus próprios funcionários e aplicar questionários internos.
 
-# Routes
+## Perfis de Usuário
 
-GET
-"/form"
-"/form:formId"
-"/question"
-"/question:questionId/answer"
-
-# Use Cases
+- **Usuário**: Permite responder aos formulários.
+- **Gerente**: Permite criar e finalizar formulários, visualizar dados dos formulários e personalizar perguntas do formulário.
+- **Administrador**: Permite visualizar usuários, visualizar formulários, criar e editar tópicos e questões.
 
 
-# Auth
-  - [x] Login
-  - [x] Register
-  - [ ] Forgot Password
+## Casos de uso
 
-# User
-  - [x] Get All
-  - [x] Get One
-  - [ ] Delete account
-  - [ ] Edit name/password
+### Manager
 
-### Form
+#### Auth
+- Login
+- Register
+- Forgot Password
 
--create form
-- [x] get all forms of user
- - pagination 
- - not include questions
-- [x] get one form
- - no auth
- - include questions
- - no sensive data
-- [x] Create new form
-- with questions if has
--[x] Edit form
-- and all questions
--[x] delete form
- - all questions should be deleted too
+#### Crud Forms
+- Create
+- Read
+- Delete
+- Change
+- Add Public Questions
+- Use Models
+- Toggle Active
+- Toggle Public
+- Generate QRCode/Link
 
-### Answer 
+### Admin
 
-Session ID for answers it helps to identify all answers of a single user
+#### Crud Public Forms
+- Create
+- Read
+- Delete
+- Change
 
-[] answer one question
-[] answer entire form
+#### Crud Public Questions
+- Create
+- Read
+- Delete
 
+### Crud Topics
+- Create
+- Read
+- Delete
 
-- Read answer
-- Answer form
-- Delete answer
-- See answers by form
-- See answers by question
+### View Users
+- List Users w/ Pagination
+  - Show (Name, Email, Number of Forms, Plan)
 
-### Graph
-
-- Generate graph data for all form answers
-- Generate graph data for question answers
+### User
+- Responder Formulário
