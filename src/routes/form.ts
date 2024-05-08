@@ -24,8 +24,7 @@ export async function formRoutes(app: FastifyInstance) {
     const forms = await prisma.form.findMany({
       where: {
         ...(query && {
-          name: { contains: query },
-          about: { contains: query },
+          OR: [{ name: { contains: query } }, { about: { contains: query } }],
         }),
         ...(isPublic ? { isPublic: true } : { userId: request.user?.sub }),
       },

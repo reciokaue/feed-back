@@ -32,6 +32,7 @@ export async function topicRoutes(app: FastifyInstance) {
 
     await prisma.topic.createMany({
       data: topics.map((name) => ({ name })),
+      skipDuplicates: true,
     })
   })
   app.delete('/topics', async (request) => {
