@@ -30,9 +30,11 @@ export async function authRoutes(app: FastifyInstance) {
         .status(statusCode.badRequest)
         .send(statusMessage.invalidPassword)
 
-    const token = jwt.sign({ name: user.name, email, sub: user.id }, secret, {
-      expiresIn: expires,
-    })
+    const token = jwt.sign(
+      { name: user.name, email, sub: user.id, access: user.accessLevel },
+      secret,
+      { expiresIn: expires },
+    )
 
     return token
   })
@@ -60,9 +62,11 @@ export async function authRoutes(app: FastifyInstance) {
           .send(statusMessage.emailAlreadyExistis)
       })
 
-    const token = jwt.sign({ name, email, sub: user.id }, secret, {
-      expiresIn: expires,
-    })
+    const token = jwt.sign(
+      { name: user.name, email, sub: user.id, access: user.accessLevel },
+      secret,
+      { expiresIn: expires },
+    )
 
     return token
   })
@@ -80,13 +84,13 @@ export async function authRoutes(app: FastifyInstance) {
         if (err || !decoded)
           return reply.status(400).send({ message: 'Invalid token' })
 
-        const { sub, name, email } = decoded as never
+        const { sub, name, email, access } = decoded as never
         const userExists = await prisma.user.findUniqueOrThrow({
           where: { id: String(sub) },
         })
 
         if (userExists) {
-          const newToken = jwt.sign({ name, email, sub }, secret, {
+          const newToken = jwt.sign({ name, email, sub, access }, secret, {
             expiresIn: expires,
           })
           return newToken

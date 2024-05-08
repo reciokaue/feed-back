@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import { paginationSchema } from '../utils/schemas/pagination'
+import { questionFormPrisma } from '../utils/schemas/form'
 
 const paramsSchema = z.object({
   id: z.string().uuid().optional(),
@@ -69,138 +70,44 @@ export async function questionRoutes(app: FastifyInstance) {
 
     return questions
   })
-  app.post('/form/:formId/question', async (request: jwtRequest) => {
-    const paramsSchema = z.object({
-      formId: z.string().uuid(),
-    })
-    const bodySchema = z.array(
-      z.object({
-        text: z.string(),
-        type: z.string(),
-        topic: z.string(),
-        options: z.array(
-          z.object({
-            text: z.string(),
-            value: z.number().nonnegative().lte(10),
-          }),
-        ),
-      }),
-    )
+  app.post('/question', async (request: jwtRequest, reply) => {
+    const question = questionFormPrisma.parse(request.body)
 
-    const { formId } = paramsSchema.parse(request.params)
-    const questions = bodySchema.parse(request.body)
+    if (question?.formId) {
+      const formExists = await prisma.form.findUnique({
+        where: { id: question.formId },
+      })
+      if (!formExists)
+        return reply.status(404).send({ message: 'form doest not exist' })
+      if (formExists.userId !== request.user?.sub)
+        return reply.status(400).send({ message: 'This is not your form' })
+    }
 
-    const createdQuestions = await Promise.all(
-      questions.map(async (question) => {
-        const { type, text, topic } = question
-        const optionsData = question.options.map((response) => ({
-          text: response.text,
-          value: response.value,
-        }))
-
-        const newQuestion = await prisma.question.create({
-          data: {
-            formId,
-            isPublic: false,
-            type,
-            text,
-            // topic,
-            options: {
-              create: optionsData,
-            },
-          },
-        })
-
-        return newQuestion
-      }),
-    )
-
-    return createdQuestions
-  })
-  app.post('/question', async (request) => {
-    const bodySchema = z.object({
-      text: z.string(),
-      formId: z.string().uuid(),
-      questionType: z.string(),
-      topics: z.array(z.string()),
-      responses: z.array(
-        z.object({
-          text: z.string(),
-          value: z.number().nonnegative().lte(10),
-        }),
-      ),
-    })
-    const { text, formId, questionType, responses, topics } = bodySchema.parse(
-      request.body,
-    )
-    console.log(responses)
-
-    const question = await prisma.question.create({
-      data: {
-        text,
-        formId,
-        type: questionType,
-        isPublic: false,
-        topics,
-        options: {
-          create: responses.map((response) => {
-            return {
-              text: response.text,
-              value: response.value, // Assuming response has text and value properties
-            }
-          }),
-        },
-      },
-      include: {
-        options: true,
-      },
+    const newQuestion = await prisma.question.create({
+      data: question as any,
     })
 
-    return question
+    return newQuestion
   })
   app.put('/question/:id', async (request) => {
-    const paramsSchema = z.object({
-      id: z.string().uuid(),
-    })
-    const bodySchema = z.object({
-      text: z.string(),
-      formId: z.string().uuid(),
-      questionType: z.string(),
-    })
-
-    const { text, formId, questionType } = bodySchema.parse(request.body)
+    const question = questionFormPrisma.parse(request.body)
     const { id } = paramsSchema.parse(request.params)
 
-    let question = await prisma.question.findUniqueOrThrow({
-      where: {
-        id,
-      },
+    const newQuestion = await prisma.question.update({
+      where: { id },
+      data: question as any,
     })
 
-    question = await prisma.question.update({
-      where: {
-        id,
-      },
-      data: {
-        text,
-        formId,
-        type: questionType,
-      },
-    })
-
-    return question
+    return newQuestion
   })
-  app.delete('/question/:id', async (request) => {
-    const paramsSchema = z.object({
-      id: z.string().uuid(),
-    })
+  app.delete('/question/:id', async (request, reply) => {
     const { id } = paramsSchema.parse(request.params)
 
-    const question = await prisma.question.findUniqueOrThrow({
-      where: {
-        id,
-      },
+    const question = await prisma.question.findUnique({
+      where: { id },
     })
+    if (!question)
+      return reply.status(404).send({ message: 'Question not found' })
 
     await prisma.question.delete({
       where: { id },

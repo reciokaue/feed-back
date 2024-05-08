@@ -31,60 +31,38 @@ export const FormSchema = z.object({
   questions: z.array(QuestionSchema).optional(),
 })
 
-export const FormSchemaForPrisma = FormSchema.extend({
-  topics: z.array(z.string()).transform((topics) => {
-    return { connect: topics?.map((topic) => ({ name: topic.toLowerCase() })) }
-  }),
-  questions: z
-    .array(
-      QuestionSchema.extend({
-        topics: z
-          .array(z.string())
-          .transform((topics) => {
-            return {
-              connect: topics?.map((topic) => ({ name: topic.toLowerCase() })),
-            }
-          })
-          .optional(),
-        options: z
-          .array(OptionSchema)
-          .transform((options) => {
-            return { create: options }
-          })
-          .optional(),
-      }),
-    )
+export const questionFormPrisma = QuestionSchema.extend({
+  formId: z.string().uuid().optional(),
+  topics: z
+    .array(z.string())
     .optional()
-    .transform((questions) => {
-      return { create: questions }
-    }),
+    .transform((topics) => ({
+      connect: topics?.map((topic) => ({ name: topic.toLowerCase() })),
+    })),
+  options: z
+    .array(OptionSchema)
+    .optional()
+    .transform((options) => ({
+      create: options?.map(({ id, ...rest }) => rest),
+    })),
+})
+
+export const FormSchemaForPrisma = FormSchema.extend({
+  topics: z.array(z.string()).transform((topics) => ({
+    connect: topics?.map((topic) => ({ name: topic.toLowerCase() })),
+  })),
+  questions: z
+    .array(questionFormPrisma)
+    .optional()
+    .transform((questions) => ({ create: questions })),
 })
 
 export const questionsSchemaForPrisma = z
-  .array(
-    QuestionSchema.extend({
-      topics: z
-        .array(z.string())
-        .transform((topics) => {
-          return {
-            connect: topics?.map((topic) => ({ name: topic.toLowerCase() })),
-          }
-        })
-        .optional(),
-      options: z
-        .array(OptionSchema)
-        .transform((options) => {
-          return { create: options.map(({ id, ...rest }) => rest) }
-        })
-        .optional(),
-    }),
-  )
+  .array(questionFormPrisma)
   .optional()
-  .transform((questions) => {
-    return {
-      create: questions ? questions.map(({ id, ...rest }) => rest) : [],
-    }
-  })
+  .transform((questions) => ({
+    create: questions ? questions.map(({ id, ...rest }) => rest) : [],
+  }))
 
 export type QuestionSchema = z.input<typeof QuestionSchema>
 export type FormSchema = z.input<typeof FormSchema>

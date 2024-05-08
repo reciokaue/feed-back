@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FastifyReply, FastifyRequest } from 'fastify'
 import jwt from 'jsonwebtoken'
-import { jwtUser } from '../types/jwtUser'
+import { jwtUser } from '../utils/types/jwtUser'
 
 const secret = process.env.SECRET || ''
 
