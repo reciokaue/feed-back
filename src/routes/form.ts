@@ -30,7 +30,9 @@ export async function formRoutes(app: FastifyInstance) {
       },
       take: pageSize,
       skip: pageSize * page,
-      include: { _count: true },
+      include: {
+        _count: true,
+      },
     })
 
     return forms

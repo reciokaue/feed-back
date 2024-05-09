@@ -26,16 +26,17 @@ model Form {
   about     String?
   active    Boolean   @default(false)
   logoUrl   String?
-  isPublic  Boolean   @default(false) // Define se é padrão ou personalizada
+  isPublic  Boolean   @default(false)
   createdAt DateTime  @default(now())
   endedAt   DateTime?
 
-  userId String? // Chave estrangeira para o User
+  userId String?
   user   User?   @relation(fields: [userId], references: [id], onDelete: NoAction)
 
   questions Question[]
   sessions  Session[]
   topics    Topic[]
+  responses Response[]
 }
 
 model User {
@@ -44,7 +45,7 @@ model User {
   email       String @unique
   password    String
   accessLevel Int    @default(0)
-  forms       Form[] // Um usuário pode ter vários formulários
+  forms       Form[]
   // subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
   // subscriptionId String?
   // eventLogs      EventLog[]
@@ -54,8 +55,8 @@ model User {
 model Question {
   id       String  @id @default(uuid())
   text     String
-  isPublic Boolean @default(false) // Define se é padrão ou personalizada
-  type     String // Pode ser 'text', 'number', 'image', etc.
+  isPublic Boolean @default(false)
+  type     String
 
   form   Form?   @relation(fields: [formId], references: [id], onDelete: Cascade)
   formId String?
@@ -68,7 +69,7 @@ model Question {
 model Option {
   id         String     @id @default(uuid())
   text       String
-  value      Int // 1 to 10
+  value      Int
   emoji      String?
   questionId String
   question   Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
@@ -92,6 +93,8 @@ model Response {
   sessionId  String?
   Option     Option?  @relation(fields: [optionId], references: [id], onDelete: NoAction)
   optionId   String?
+  Form       Form?    @relation(fields: [formId], references: [id])
+  formId     String?
 }
 
 model Topic {
