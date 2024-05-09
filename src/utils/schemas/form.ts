@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { z } from 'zod'
 
+export const ResponseSchema = z.object({
+  id: z.string().uuid().optional(),
+  value: z.string(),
+  questionId: z.string().uuid(),
+  sessionId: z.string().uuid().optional(),
+})
+
 export const OptionSchema = z.object({
   id: z.string().optional(),
   text: z.string(),
@@ -29,6 +36,13 @@ export const FormSchema = z.object({
   topics: z.array(z.string()).optional(),
   logoUrl: z.string().nullable().optional(),
   questions: z.array(QuestionSchema).optional(),
+})
+
+export const SessionSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.date(),
+  responses: z.array(ResponseSchema),
+  formId: z.string().uuid().optional(),
 })
 
 export const questionFormPrisma = QuestionSchema.extend({

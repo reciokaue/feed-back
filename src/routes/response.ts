@@ -2,10 +2,12 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { paginationSchema } from '../utils/schemas/pagination'
+import { ResponseSchema } from '../utils/schemas/form'
 
 const paramsSchema = z.object({
   questionId: z.string().uuid().optional(),
   responseId: z.string().uuid().optional(),
+  sessionId: z.string().uuid().optional(),
 })
 
 export async function responseRoutes(app: FastifyInstance) {
@@ -14,36 +16,54 @@ export async function responseRoutes(app: FastifyInstance) {
     const { questionId } = paramsSchema.parse(request.params)
 
     const responses = await prisma.response.findMany({
-      where: { questionId, OR: [{ value: query }] },
+      where: {
+        questionId,
+        ...(query && { value: { contains: query } }),
+      },
       take: pageSize,
       skip: pageSize * page,
     })
 
     return responses
   })
-  app.post('/responses', async (request) => {
-    const bodySchema = z.array(z.string().toLowerCase())
-    const responses = bodySchema.parse(request.body)
+  app.get('/responses/session/:sessionId', async (request) => {
+    const { page, pageSize, query } = paginationSchema.parse(request.query)
+    const { sessionId } = paramsSchema.parse(request.params)
 
-    if (responses.length === 0)
-      return Response.json({ message: 'missing data' }, { status: 400 })
+    const responses = await prisma.response.findMany({
+      where: {
+        sessionId,
+        ...(query && { value: { contains: query } }),
+      },
+      take: pageSize,
+      skip: pageSize * page,
+    })
 
-    await prisma.response.createMany({
-      data: responses.map((name) => ({ name })),
-      skipDuplicates: true,
+    return responses
+  })
+  app.post('/response', async (request, reply) => {
+    const response = ResponseSchema.parse(request.body)
+
+    if (!response.sessionId) {
+      const session = await prisma.session.create({
+        data: {
+          responses: {
+            create: response,
+          },
+        },
+      })
+      return reply.status(201).send(session.id)
+    }
+
+    await prisma.response.create({
+      data: response,
     })
   })
-  app.delete('/responses', async (request) => {
-    const bodySchema = z.array(z.string())
-    const responses = bodySchema.parse(request.body)
-
-    if (responses.length === 0)
-      return Response.json({ message: 'missing data' }, { status: 400 })
+  app.delete('/response/:responseId', async (request) => {
+    const { responseId } = paramsSchema.parse(request.params)
 
     await prisma.response.deleteMany({
-      where: {
-        name: { in: responses },
-      },
+      where: { id: responseId },
     })
   })
 }

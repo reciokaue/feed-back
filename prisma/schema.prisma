@@ -34,7 +34,6 @@ model Form {
   user   User?   @relation(fields: [userId], references: [id], onDelete: NoAction)
 
   questions Question[]
-  responses Response[]
   sessions  Session[]
   topics    Topic[]
 }
@@ -88,8 +87,6 @@ model Response {
   value      String // Text or ID of the option
   questionId String
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  formId     String
-  form       Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
   Session    Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId  String?
 }

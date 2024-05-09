@@ -9,6 +9,7 @@ import { authRoutes } from './routes/auth'
 import { userRoutes } from './routes/user'
 import { formRoutes } from './routes/form'
 import { optionRoutes } from './routes/options'
+import { responseRoutes } from './routes/response'
 
 const app = fastify()
 
@@ -18,6 +19,7 @@ app.register(topicRoutes)
 app.register(formRoutes)
 app.register(questionRoutes)
 app.register(optionRoutes)
+app.register(responseRoutes)
 
 app.register(cors, { origin: true })
 
