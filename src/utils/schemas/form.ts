@@ -6,6 +6,7 @@ export const ResponseSchema = z.object({
   value: z.string().optional(),
   questionId: z.string().uuid(),
   sessionId: z.string().uuid().optional(),
+  formId: z.string().uuid(),
   optionId: z.string().uuid(),
 })
 
