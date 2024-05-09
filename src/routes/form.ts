@@ -8,6 +8,7 @@ import {
   questionsSchemaForPrisma,
 } from '../utils/schemas/form'
 import { paginationSchema } from '../utils/schemas/pagination'
+import { formatForm } from '../utils/formatForm'
 
 const paramsSchema = z.object({
   id: z.string().uuid(),
@@ -30,22 +31,41 @@ export async function formRoutes(app: FastifyInstance) {
       },
       take: pageSize,
       skip: pageSize * page,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        about: true,
+        active: true,
+        logoUrl: true,
+        isPublic: true,
+        topics: true,
         _count: true,
       },
     })
+    const formated = forms.map((form) => formatForm(form))
 
-    return forms
+    return formated
   })
   app.get('/form/:id', async (request, reply) => {
     const { id } = paramsSchema.parse(request.params)
 
     const form = await prisma.form.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        about: true,
+        active: true,
+        logoUrl: true,
+        isPublic: true,
         topics: true,
         questions: {
-          include: {
+          select: {
+            id: true,
+            text: true,
+            type: true,
+            isPublic: true,
+            topics: true,
             options: {
               select: {
                 value: true,
@@ -58,9 +78,11 @@ export async function formRoutes(app: FastifyInstance) {
         },
       },
     })
-    if (!form) return reply.status(404).send({ message: 'Form not found' })
 
-    return form
+    if (!form) return reply.status(404).send({ message: 'Form not found' })
+    const formated = formatForm(form)
+
+    return formated
   })
   app.post('/form', async (request: jwtRequest, reply) => {
     try {
