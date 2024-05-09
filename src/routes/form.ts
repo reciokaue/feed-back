@@ -44,12 +44,18 @@ export async function formRoutes(app: FastifyInstance) {
         topics: true,
         questions: {
           include: {
-            options: true,
+            options: {
+              select: {
+                value: true,
+                emoji: true,
+                text: true,
+                _count: true,
+              },
+            },
           },
         },
       },
     })
-
     if (!form) return reply.status(404).send({ message: 'Form not found' })
 
     return form
