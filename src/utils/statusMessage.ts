@@ -7,7 +7,7 @@ export const statusMessage = {
   emailAlreadyExistis: {
     message: 'This email already existis, please use another',
   },
-  emailNotExist: { message: "Email doesn't exist" },
+  emailNotExist: { message: "Email does not exist" },
   notVerified: { message: 'User not verified' },
   badRequest: { message: 'Bad request' },
   unauthorized: { message: 'Unauthorized' },

@@ -60,18 +60,19 @@ model Question {
   form   Form?   @relation(fields: [formId], references: [id], onDelete: Cascade)
   formId String?
 
-  options  Option[]
-  response Response[]
-  topics   Topic[]
+  options   Option[]
+  responses Response[]
+  topics    Topic[]
 }
 
 model Option {
-  id         String   @id @default(uuid())
+  id         String     @id @default(uuid())
   text       String
   value      Int // 1 to 10
   emoji      String?
   questionId String
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question   Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  responses  Response[]
 }
 
 model Session {
@@ -84,11 +85,13 @@ model Session {
 
 model Response {
   id         String   @id @default(uuid())
-  value      String // Text or ID of the option
-  questionId String
+  value      String?
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId String
   Session    Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId  String?
+  Option     Option?  @relation(fields: [optionId], references: [id], onDelete: NoAction)
+  optionId   String?
 }
 
 model Topic {

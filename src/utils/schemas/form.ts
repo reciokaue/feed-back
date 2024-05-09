@@ -3,9 +3,10 @@ import { z } from 'zod'
 
 export const ResponseSchema = z.object({
   id: z.string().uuid().optional(),
-  value: z.string(),
+  value: z.string().optional(),
   questionId: z.string().uuid(),
   sessionId: z.string().uuid().optional(),
+  optionId: z.string().uuid(),
 })
 
 export const OptionSchema = z.object({

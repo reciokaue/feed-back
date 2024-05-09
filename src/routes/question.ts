@@ -78,7 +78,7 @@ export async function questionRoutes(app: FastifyInstance) {
         where: { id: question.formId },
       })
       if (!formExists)
-        return reply.status(404).send({ message: 'form doest not exist' })
+        return reply.status(404).send({ message: 'form does not not exist' })
       if (formExists.userId !== request.user?.sub)
         return reply.status(400).send({ message: 'This is not your form' })
     }
