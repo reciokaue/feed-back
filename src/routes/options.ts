@@ -4,13 +4,13 @@ import { z } from 'zod'
 import { verifyJwt } from '../middlewares/JWTAuth'
 import { OptionSchema } from '../utils/schemas/form'
 
+const paramsSchema = z.object({
+  questionId: z.string().uuid().optional(),
+  optionId: z.string().uuid().optional(),
+})
+
 export async function optionRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
-
-  const paramsSchema = z.object({
-    questionId: z.string().uuid().optional(),
-    optionId: z.string().uuid().optional(),
-  })
 
   app.get('/options/:questionId', async (request) => {
     const { questionId } = z

@@ -34,7 +34,7 @@ model Form {
   user   User?   @relation(fields: [userId], references: [id], onDelete: NoAction)
 
   questions Question[]
-  answers   Answer[]
+  responses Response[]
   sessions  Session[]
   topics    Topic[]
 }
@@ -61,9 +61,9 @@ model Question {
   form   Form?   @relation(fields: [formId], references: [id], onDelete: Cascade)
   formId String?
 
-  options Option[]
-  answer  Answer[]
-  topics  Topic[]
+  options  Option[]
+  response Response[]
+  topics   Topic[]
 }
 
 model Option {
@@ -76,14 +76,14 @@ model Option {
 }
 
 model Session {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  answers   Answer[]
-  Form      Form?    @relation(fields: [formId], references: [id], onDelete: NoAction)
+  id        String     @id @default(uuid())
+  createdAt DateTime   @default(now())
+  responses Response[]
+  Form      Form?      @relation(fields: [formId], references: [id], onDelete: NoAction)
   formId    String?
 }
 
-model Answer {
+model Response {
   id         String   @id @default(uuid())
   value      String // Text or ID of the option
   questionId String
