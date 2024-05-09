@@ -3,22 +3,23 @@ import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { paginationSchema } from '../utils/schemas/pagination'
 
+const paramsSchema = z.object({
+  questionId: z.string().uuid().optional(),
+  responseId: z.string().uuid().optional(),
+})
+
 export async function responseRoutes(app: FastifyInstance) {
   app.get('/responses/:questionId', async (request) => {
     const { page, pageSize, query } = paginationSchema.parse(request.query)
+    const { questionId } = paramsSchema.parse(request.params)
 
     const responses = await prisma.response.findMany({
-      where: {
-        ...(query && {
-          name: { contains: query },
-        }),
-      },
+      where: { questionId, OR: [{ value: query }] },
       take: pageSize,
       skip: pageSize * page,
     })
-    const formatedResponses = responses.map((response) => response.name)
 
-    return formatedResponses
+    return responses
   })
   app.post('/responses', async (request) => {
     const bodySchema = z.array(z.string().toLowerCase())
