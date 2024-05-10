@@ -66,6 +66,11 @@ export async function formRoutes(app: FastifyInstance) {
             type: true,
             isPublic: true,
             topics: true,
+            _count: {
+              select: {
+                responses: true,
+              },
+            },
             options: {
               select: {
                 value: true,
@@ -76,6 +81,7 @@ export async function formRoutes(app: FastifyInstance) {
             },
           },
         },
+        _count: true,
       },
     })
 
