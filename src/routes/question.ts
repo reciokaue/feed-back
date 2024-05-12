@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import { paginationSchema } from '../utils/schemas/pagination'
 import { questionFormPrisma } from '../utils/schemas/form'
+import { formatQuestions } from '../utils/formatQuestion'
 
 const paramsSchema = z.object({
   id: z.string().uuid().optional(),
@@ -46,7 +47,9 @@ export async function questionRoutes(app: FastifyInstance) {
     })
     if (!questions) return reply.status(404).send({ message: 'Form not found' })
 
-    return questions
+    const formated = formatQuestions(questions)
+
+    return formated
   })
   app.get('/questions', async (request, reply) => {
     const { query, page, pageSize } = paginationSchema.parse(request.query)
