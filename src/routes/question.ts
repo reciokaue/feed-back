@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import { paginationSchema } from '../utils/schemas/pagination'
 import { questionFormPrisma } from '../utils/schemas/form'
-import { formatQuestions } from '../utils/formatQuestion'
+import { formatQuestions } from '../utils/format/question'
 
 const paramsSchema = z.object({
   id: z.string().uuid().optional(),

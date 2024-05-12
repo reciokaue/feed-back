@@ -8,7 +8,7 @@ import {
   questionsSchemaForPrisma,
 } from '../utils/schemas/form'
 import { paginationSchema } from '../utils/schemas/pagination'
-import { formatForm } from '../utils/formatForm'
+import { formatForm } from '../utils/format/form'
 
 const paramsSchema = z.object({
   id: z.string().uuid(),

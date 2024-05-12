@@ -1,4 +1,4 @@
-import { formatQuestion } from './formatQuestion'
+import { formatQuestion } from './question'
 
 export function formatForm(data: any) {
   data.topics = data.topics.map((topic: any) => topic.name)
