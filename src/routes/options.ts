@@ -34,6 +34,15 @@ export async function optionRoutes(app: FastifyInstance) {
 
     return newOption
   })
+  app.put(`/option/:optionId`, async (request) => {
+    const { optionId } = paramsSchema.parse(request.params)
+    const option = OptionSchema.parse(request.body)
+
+    await prisma.option.update({
+      where: { id: optionId },
+      data: option,
+    })
+  })
   app.delete(`/option/:optionId`, async (request) => {
     const { optionId } = paramsSchema.parse(request.params)
 

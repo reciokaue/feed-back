@@ -15,6 +15,7 @@ export const OptionSchema = z.object({
   text: z.string(),
   value: z.number(),
   emoji: z.string().optional().nullable(),
+  index: z.number().optional().default(0),
 })
 
 export const QuestionSchema = z.object({
@@ -24,6 +25,7 @@ export const QuestionSchema = z.object({
   type: z.string(),
   topics: z.array(z.string()).optional(),
   options: z.array(OptionSchema).optional(),
+  index: z.number().optional().default(0),
 })
 
 export const FormSchema = z.object({

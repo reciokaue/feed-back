@@ -73,9 +73,11 @@ export async function formRoutes(app: FastifyInstance) {
             },
             options: {
               select: {
+                id: true,
+                text: true,
                 value: true,
                 emoji: true,
-                text: true,
+                index: true,
                 _count: true,
               },
             },
