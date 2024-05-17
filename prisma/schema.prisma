@@ -20,89 +20,94 @@ generator erd {
   includeRelationFromFields = true
 }
 
-model Form {
-  id        String    @id @default(uuid())
-  name      String
-  about     String?
-  active    Boolean   @default(false)
-  logoUrl   String?
-  isPublic  Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  endedAt   DateTime?
-
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: NoAction)
-
-  questions Question[]
-  sessions  Session[]
-  topics    Topic[]
-  responses Response[]
-}
-
 model User {
-  id          String @id @default(uuid())
+  id          Int    @id @default(autoincrement())
   name        String
   email       String @unique
   password    String
-  accessLevel Int    @default(0)
-  forms       Form[]
-  // subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
-  // subscriptionId String?
-  // eventLogs      EventLog[]
-  // cards          CreditCard[]
+  accessLevel Int
+
+  forms Form[] @relation("UserForms")
+}
+
+model Form {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  active      Boolean
+  logoUrl     String?
+  public      Boolean
+  createdAt   DateTime @default(now())
+  userId      Int
+
+  user       User        @relation(fields: [userId], references: [id], name: "UserForms")
+  questions  Question[]
+  sessions   Session[]
+  formTopics FormTopic[]
 }
 
 model Question {
-  id       String  @id @default(uuid())
-  text     String
-  isPublic Boolean @default(false)
-  type     String
-  index    Int     @default(0)
+  id     Int    @id @default(autoincrement())
+  text   String
+  type   String
+  index  Int
+  formId Int
 
-  form   Form?   @relation(fields: [formId], references: [id], onDelete: Cascade)
-  formId String?
-
+  form      Form       @relation(fields: [formId], references: [id])
   options   Option[]
   responses Response[]
-  topics    Topic[]
 }
 
 model Option {
-  id    String  @id @default(uuid())
-  text  String
-  value Int
-  emoji String?
-  index Int     @default(0)
+  id         Int    @id @default(autoincrement())
+  text       String
+  index      Int
+  questionId Int
 
-  questionId String
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
+  question  Question   @relation(fields: [questionId], references: [id])
   responses Response[]
+}
+
+model QuestionType {
+  id   Int    @id @default(autoincrement())
+  name String
 }
 
 model Session {
-  id        String     @id @default(uuid())
-  createdAt DateTime   @default(now())
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  formId    Int
+
+  form      Form       @relation(fields: [formId], references: [id])
   responses Response[]
-  Form      Form?      @relation(fields: [formId], references: [id], onDelete: NoAction)
-  formId    String?
 }
 
 model Response {
-  id         String   @id @default(uuid())
-  value      String?
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  questionId String
-  Session    Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  sessionId  String?
-  Option     Option?  @relation(fields: [optionId], references: [id], onDelete: NoAction)
-  optionId   String?
-  Form       Form?    @relation(fields: [formId], references: [id])
-  formId     String?
+  id         Int      @id @default(autoincrement())
+  text       String
+  createdAt  DateTime @default(now())
+  sessionId  Int
+  questionId Int
+  optionId   Int
+
+  session  Session  @relation(fields: [sessionId], references: [id])
+  question Question @relation(fields: [questionId], references: [id])
+  option   Option   @relation(fields: [optionId], references: [id])
 }
 
 model Topic {
-  name     String     @id @unique
-  form     Form[]
-  question Question[]
+  id   Int    @id @default(autoincrement())
+  name String
+
+  formTopics FormTopic[]
+}
+
+model FormTopic {
+  formId  Int
+  topicId Int
+
+  form  Form  @relation(fields: [formId], references: [id])
+  topic Topic @relation(fields: [topicId], references: [id])
+
+  @@id([formId, topicId])
 }
