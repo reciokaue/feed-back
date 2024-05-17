@@ -7,7 +7,7 @@ import { verifyJwt } from '../middlewares/JWTAuth'
 export async function topicRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
-  app.get('/topics', async (request) => {
+  app.get('/topics', async (request, reply) => {
     const { page, pageSize, query } = paginationSchema.parse(request.query)
 
     const topics = await prisma.topic.findMany({
@@ -21,9 +21,9 @@ export async function topicRoutes(app: FastifyInstance) {
     })
     const formatedTopics = topics.map((topic) => topic.name)
 
-    return formatedTopics
+    return reply.status(200).send(formatedTopics)
   })
-  app.post('/topics', async (request) => {
+  app.post('/topics', async (request, reply) => {
     const bodySchema = z.array(z.string().toLowerCase())
     const topics = bodySchema.parse(request.body)
 
@@ -34,8 +34,10 @@ export async function topicRoutes(app: FastifyInstance) {
       data: topics.map((name) => ({ name })),
       skipDuplicates: true,
     })
+
+    reply.status(201).send()
   })
-  app.delete('/topics', async (request) => {
+  app.delete('/topics', async (request, reply) => {
     const bodySchema = z.array(z.string())
     const topics = bodySchema.parse(request.body)
 
@@ -47,5 +49,7 @@ export async function topicRoutes(app: FastifyInstance) {
         name: { in: topics },
       },
     })
+
+    reply.send()
   })
 }

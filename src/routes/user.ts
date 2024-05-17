@@ -7,7 +7,7 @@ import { userSchema } from '../utils/schemas/user'
 import bcrypt from 'bcrypt'
 
 const paramsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.coerce.number().int().positive(),
 })
 
 export async function userRoutes(app: FastifyInstance) {

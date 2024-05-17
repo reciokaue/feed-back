@@ -86,7 +86,7 @@ export async function authRoutes(app: FastifyInstance) {
 
         const { sub, name, email, access } = decoded as never
         const userExists = await prisma.user.findUniqueOrThrow({
-          where: { id: String(sub) },
+          where: { id: sub },
         })
 
         if (userExists) {

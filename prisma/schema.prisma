@@ -25,7 +25,7 @@ model User {
   name        String
   email       String @unique
   password    String
-  accessLevel Int
+  accessLevel Int    @default(0)
 
   forms Form[] @relation("UserForms")
 }
