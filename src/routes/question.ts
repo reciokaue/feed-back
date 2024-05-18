@@ -3,12 +3,12 @@ import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import { paginationSchema } from '../utils/schemas/pagination'
-import { questionFormPrisma } from '../utils/schemas/form'
-import { formatQuestions } from '../utils/format/question'
+import { questionFormPrisma, QuestionSchema } from '../utils/schemas/form'
+import { questionSelect } from '../utils/selects/question'
 
 const paramsSchema = z.object({
-  id: z.string().uuid().optional(),
-  formId: z.string().uuid().optional(),
+  id: z.coerce.number().int().positive().optional(),
+  formId: z.coerce.number().int().positive().optional(),
 })
 
 export async function questionRoutes(app: FastifyInstance) {
@@ -18,10 +18,7 @@ export async function questionRoutes(app: FastifyInstance) {
     const { id } = paramsSchema.parse(request.params)
     const question = await prisma.question.findUnique({
       where: { id },
-      include: {
-        options: true,
-        topics: true,
-      },
+      select: questionSelect,
     })
     if (!question)
       return reply.status(404).send({ message: 'Question not found' })
@@ -40,34 +37,29 @@ export async function questionRoutes(app: FastifyInstance) {
           { options: { some: { text: { contains: query } } } },
         ],
       },
-      include: {
-        topics: true,
-        options: true,
-      },
+      select: questionSelect,
     })
     if (!questions) return reply.status(404).send({ message: 'Form not found' })
 
-    const formated = formatQuestions(questions)
-
-    return formated
+    return questions
   })
+  // public questions
   app.get('/questions', async (request, reply) => {
     const { query, page, pageSize } = paginationSchema.parse(request.query)
 
     const questions = await prisma.question.findMany({
       where: {
-        isPublic: true,
         OR: [
           { text: { contains: query } },
           { options: { some: { text: { contains: query } } } },
         ],
+        form: {
+          isPublic: true,
+        },
       },
       take: pageSize,
       skip: pageSize * page,
-      include: {
-        topics: true,
-        options: true,
-      },
+      select: { ...questionSelect, formId: true },
     })
     if (!questions) return reply.status(404).send({ message: 'Form not found' })
 
@@ -92,16 +84,17 @@ export async function questionRoutes(app: FastifyInstance) {
 
     return newQuestion
   })
-  app.put('/question/:id', async (request) => {
+  app.put('/question/:id', async (request, reply) => {
     const question = questionFormPrisma.parse(request.body)
     const { id } = paramsSchema.parse(request.params)
 
-    const newQuestion = await prisma.question.update({
+    console.log(question.options, id)
+    await prisma.question.update({
       where: { id },
       data: question as any,
     })
 
-    return newQuestion
+    return reply.status(200).send()
   })
   app.delete('/question/:id', async (request, reply) => {
     const { id } = paramsSchema.parse(request.params)

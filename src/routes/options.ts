@@ -5,17 +5,15 @@ import { verifyJwt } from '../middlewares/JWTAuth'
 import { OptionSchema } from '../utils/schemas/form'
 
 const paramsSchema = z.object({
-  questionId: z.string().uuid().optional(),
-  optionId: z.string().uuid().optional(),
+  questionId: z.coerce.number().positive().int().optional(),
+  optionId: z.coerce.number().positive().int().optional(),
 })
 
 export async function optionRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
   app.get('/options/:questionId', async (request) => {
-    const { questionId } = z
-      .object({ questionId: z.string().uuid() })
-      .parse(request.params)
+    const { questionId } = paramsSchema.parse(request.params)
 
     const options = await prisma.option.findMany({
       where: { questionId },
@@ -24,12 +22,10 @@ export async function optionRoutes(app: FastifyInstance) {
     return options
   })
   app.post('/option', async (request) => {
-    const option = OptionSchema.extend({
-      questionId: z.string().uuid(),
-    }).parse(request.body)
+    const option = OptionSchema.parse(request.body)
 
     const newOption = await prisma.option.create({
-      data: option,
+      data: option as any,
     })
 
     return newOption

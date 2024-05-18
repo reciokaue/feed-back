@@ -19,9 +19,9 @@ export async function topicRoutes(app: FastifyInstance) {
       take: pageSize,
       skip: pageSize * page,
     })
-    const formatedTopics = topics.map((topic) => topic.name)
+    // const formatedTopics = topics.map((topic) => topic.name)
 
-    return reply.status(200).send(formatedTopics)
+    return reply.status(200).send(topics)
   })
   app.post('/topics', async (request, reply) => {
     const bodySchema = z.array(z.string().toLowerCase())

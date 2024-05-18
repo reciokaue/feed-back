@@ -2,73 +2,62 @@
 import { z } from 'zod'
 
 export const ResponseSchema = z.object({
-  id: z.string().uuid().optional(),
-  value: z.string().optional(),
+  id: z.coerce.number().positive().int().optional(),
+  value: z.coerce.number().positive().int().optional(),
   questionId: z.string().uuid(),
-  sessionId: z.string().uuid().optional(),
-  formId: z.string().uuid(),
-  optionId: z.string().uuid(),
+  sessionId: z.coerce.number().positive().int().optional(),
 })
 
 export const OptionSchema = z.object({
-  id: z.string().optional(),
+  id: z.coerce.number().positive().int().optional(),
   text: z.string(),
-  value: z.number(),
-  emoji: z.string().optional().nullable(),
   index: z.number().optional().default(0),
+  questionId: z.coerce.number().positive().int().optional(),
 })
 
 export const QuestionSchema = z.object({
-  id: z.string().optional(),
+  id: z.coerce.number().positive().int().optional(),
   text: z.string(),
-  isPublic: z.boolean().optional(),
   type: z.string(),
-  topics: z.array(z.string()).optional(),
   options: z.array(OptionSchema).optional(),
   index: z.number().optional().default(0),
 })
 
 export const FormSchema = z.object({
-  id: z.string().optional(),
+  id: z.coerce.number().positive().int().optional(),
   name: z.string(),
   about: z.string().nullable().optional(),
   active: z.boolean().nullable().optional().default(false),
   isPublic: z.boolean().optional().default(false),
   createdAt: z.string().nullable().optional(),
-  endedAt: z.string().nullable().optional(),
-  userId: z.string().nullable().optional(),
+  userId: z.coerce.number().positive().int().optional(),
   topics: z.array(z.string()).optional(),
   logoUrl: z.string().nullable().optional(),
   questions: z.array(QuestionSchema).optional(),
 })
 
 export const SessionSchema = z.object({
-  id: z.string().uuid().optional(),
+  id: z.coerce.number().positive().int().optional(),
   createdAt: z.date(),
   responses: z.array(ResponseSchema),
-  formId: z.string().uuid().optional(),
+  formId: z.coerce.number().positive().int().optional(),
 })
 
 export const questionFormPrisma = QuestionSchema.extend({
-  formId: z.string().uuid().optional(),
-  topics: z
-    .array(z.string())
-    .optional()
-    .transform((topics) => ({
-      connect: topics?.map((topic) => ({ name: topic.toLowerCase() })),
-    })),
+  formId: z.coerce.number().positive().int().optional(),
   options: z
     .array(OptionSchema)
     .optional()
     .transform((options) => ({
-      create: options?.map(({ id, ...rest }) => rest),
+      updateMany: options?.map((op) => ({
+        where: { id: op.id },
+        data: op,
+      })),
     })),
 })
 
 export const FormSchemaForPrisma = FormSchema.extend({
-  topics: z.array(z.string()).transform((topics) => ({
-    connect: topics?.map((topic) => ({ name: topic.toLowerCase() })),
-  })),
+  topics: z.array(z.number()).optional(),
   questions: z
     .array(questionFormPrisma)
     .optional()
@@ -79,7 +68,7 @@ export const questionsSchemaForPrisma = z
   .array(questionFormPrisma)
   .optional()
   .transform((questions) => ({
-    create: questions ? questions.map(({ id, ...rest }) => rest) : [],
+    create: questions ? questions.map(({ id, formId, ...rest }) => rest) : [],
   }))
 
 export type QuestionSchema = z.input<typeof QuestionSchema>

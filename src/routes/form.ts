@@ -9,9 +9,10 @@ import {
 } from '../utils/schemas/form'
 import { paginationSchema } from '../utils/schemas/pagination'
 import { formatForm } from '../utils/format/form'
+import { formDetailSelect, formSelect } from '../utils/selects/form'
 
 const paramsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.coerce.number().positive().int().optional(),
 })
 
 export async function formRoutes(app: FastifyInstance) {
@@ -31,18 +32,9 @@ export async function formRoutes(app: FastifyInstance) {
       },
       take: pageSize,
       skip: pageSize * page,
-      select: {
-        id: true,
-        name: true,
-        about: true,
-        active: true,
-        logoUrl: true,
-        isPublic: true,
-        topics: true,
-        _count: true,
-      },
+      select: formSelect,
     })
-    const formated = forms.map((form) => formatForm(form))
+    const formated = forms?.map((form) => formatForm(form))
 
     return formated
   })
@@ -51,82 +43,36 @@ export async function formRoutes(app: FastifyInstance) {
 
     const form = await prisma.form.findUnique({
       where: { id },
-      select: {
-        id: true,
-        name: true,
-        about: true,
-        active: true,
-        logoUrl: true,
-        isPublic: true,
-        topics: true,
-        questions: {
-          select: {
-            id: true,
-            text: true,
-            type: true,
-            isPublic: true,
-            topics: true,
-            _count: {
-              select: {
-                responses: true,
-              },
-            },
-            options: {
-              select: {
-                id: true,
-                text: true,
-                value: true,
-                emoji: true,
-                index: true,
-                _count: true,
-              },
-            },
-          },
-        },
-        _count: true,
-      },
+      select: formDetailSelect,
     })
 
     if (!form) return reply.status(404).send({ message: 'Form not found' })
-    const formated = formatForm(form)
 
-    return formated
+    return formatForm(form)
   })
   app.post('/form', async (request: jwtRequest, reply) => {
     try {
-      const paramsSchema = z.object({
-        baseFormId: z.string().uuid().optional(),
-      })
-
+      const { id: baseFormId } = paramsSchema.parse(request.query)
       const form = FormSchemaForPrisma.parse(request.body)
-      const { baseFormId } = paramsSchema.parse(request.query)
+
       form.userId = request.user?.sub
-
-      async function getBaseFormQuestions(id: string) {
-        const baseForm = await prisma.form.findUnique({
-          where: { id },
-          include: {
-            questions: {
-              include: {
-                options: true,
-              },
-            },
-          },
-        })
-        if (!baseForm)
-          reply.status(404).send({ message: 'Base form not found' })
-
-        return {
-          questions: questionsSchemaForPrisma.parse(baseForm?.questions),
-        }
-      }
+      const topics = form.topics
+      delete form.topics
 
       const newForm = await prisma.form.create({
         data: {
           ...form,
-          ...(baseFormId && (await getBaseFormQuestions(baseFormId))),
+          ...(baseFormId && (await getBaseFormQuestions(baseFormId, reply))),
         } as any,
       })
+      await prisma.formTopic.createMany({
+        data: topics?.map((topicId) => ({
+          formId: newForm.id,
+          topicId,
+        })) as any,
+        skipDuplicates: true,
+      })
+
       reply.status(200).send(newForm)
     } catch (err) {
       console.log(err)
@@ -150,13 +96,15 @@ export async function formRoutes(app: FastifyInstance) {
 
     return updatedForm
   })
-  app.delete('/form/:id', async (request, reply) => {
+  app.delete('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
 
     const form = await prisma.form.findUnique({
       where: { id },
     })
     if (!form) return reply.status(404).send({ message: 'Form not found' })
+    if (form.userId !== request?.user?.sub && request.user?.access === 0)
+      return reply.status(400).send({ message: 'Not your form' })
 
     await prisma.form.delete({
       where: { id: form.id },
@@ -164,4 +112,22 @@ export async function formRoutes(app: FastifyInstance) {
 
     return form
   })
+}
+
+async function getBaseFormQuestions(id: number, reply: any) {
+  const baseForm = await prisma.form.findUnique({
+    where: { id },
+    include: {
+      questions: {
+        include: {
+          options: true,
+        },
+      },
+    },
+  })
+  if (!baseForm) reply.status(404).send({ message: 'Base form not found' })
+
+  return {
+    questions: questionsSchemaForPrisma.parse(baseForm?.questions),
+  }
 }

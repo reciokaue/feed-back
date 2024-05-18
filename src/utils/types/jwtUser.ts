@@ -1,7 +1,7 @@
 export interface jwtUser {
   name: string
   email: string
-  sub: string
+  sub: number
   access: number
   iat: number
   exp: number
