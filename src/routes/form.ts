@@ -3,7 +3,6 @@ import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import {
-  FormSchema,
   FormSchemaForPrisma,
   questionsSchemaForPrisma,
 } from '../utils/schemas/form'
@@ -81,20 +80,39 @@ export async function formRoutes(app: FastifyInstance) {
   })
   app.put('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
-    const form = FormSchema.parse(request.body)
+    const form = FormSchemaForPrisma.parse(request.body)
+
+    const topics = form.topics
+    delete form.topics
+    delete form.questions
 
     const formExists = await prisma.form.findUnique({
       where: { id },
+      select: formSelect,
     })
     if (!formExists)
       return reply.status(404).send({ message: 'Form not found' })
 
-    const updatedForm = await prisma.form.update({
-      where: { id },
-      data: form as any,
-    })
+    const topicsIds = formExists.formTopics.map(
+      (formTopic) => formTopic.topic.id,
+    )
+    const deletedTopics = topicsIds
+      ?.filter((topic) => !topics?.includes(topic))
+      .map((topic) => ({ topicId: topic, formId: id }))
+    const newTopics = topics
+      ?.filter((topic) => !topicsIds?.includes(topic))
+      .map((topic) => ({ topicId: topic }))
 
-    return updatedForm
+    await prisma.form.update({
+      where: { id },
+      data: {
+        ...form,
+        formTopics: {
+          deleteMany: deletedTopics,
+          createMany: { data: newTopics },
+        },
+      } as any,
+    })
   })
   app.delete('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)

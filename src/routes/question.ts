@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import { paginationSchema } from '../utils/schemas/pagination'
-import { questionFormPrisma, QuestionSchema } from '../utils/schemas/form'
+import { questionFormPrisma } from '../utils/schemas/form'
 import { questionSelect } from '../utils/selects/question'
 
 const paramsSchema = z.object({

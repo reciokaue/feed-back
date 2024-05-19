@@ -10,6 +10,7 @@ import { userRoutes } from './routes/user'
 import { formRoutes } from './routes/form'
 import { optionRoutes } from './routes/options'
 import { responseRoutes } from './routes/response'
+import { questionTypeRoutes } from './routes/questionType'
 
 const app = fastify()
 
@@ -20,6 +21,7 @@ app.register(formRoutes)
 app.register(questionRoutes)
 app.register(optionRoutes)
 app.register(responseRoutes)
+app.register(questionTypeRoutes)
 
 app.register(cors, { origin: true })
 

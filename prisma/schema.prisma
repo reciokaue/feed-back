@@ -47,13 +47,15 @@ model Form {
 }
 
 model Question {
-  id     Int    @id @default(autoincrement())
-  text   String
-  type   String
-  index  Int
-  formId Int
+  id    Int    @id @default(autoincrement())
+  text  String
+  index Int
 
-  form      Form       @relation(fields: [formId], references: [id], onDelete: Cascade)
+  typeId       Int?
+  questionType QuestionType? @relation(fields: [typeId], references: [id])
+  formId       Int
+  form         Form          @relation(fields: [formId], references: [id], onDelete: Cascade)
+
   options   Option[]
   responses Response[]
 }
@@ -68,8 +70,9 @@ model Option {
 }
 
 model QuestionType {
-  id   Int    @id @default(autoincrement())
-  name String
+  id        Int        @id @default(autoincrement())
+  name      String
+  questions Question[]
 }
 
 model Session {

@@ -2,7 +2,7 @@ export const questionSelect = {
   id: true,
   text: true,
   index: true,
-  type: true,
+  questionType: true,
   options: {
     select: {
       id: true,

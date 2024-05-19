@@ -31,7 +31,14 @@ export const FormSchema = z.object({
   isPublic: z.boolean().optional().default(false),
   createdAt: z.string().nullable().optional(),
   userId: z.coerce.number().positive().int().optional(),
-  topics: z.array(z.string()).optional(),
+  topics: z
+    .array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+      }),
+    )
+    .optional(),
   logoUrl: z.string().nullable().optional(),
   questions: z.array(QuestionSchema).optional(),
 })
@@ -44,6 +51,7 @@ export const SessionSchema = z.object({
 })
 
 export const questionFormPrisma = QuestionSchema.extend({
+  typeId: z.coerce.number().positive().int().optional(),
   formId: z.coerce.number().positive().int().optional(),
   options: z
     .array(OptionSchema)
@@ -60,8 +68,8 @@ export const FormSchemaForPrisma = FormSchema.extend({
   topics: z.array(z.number()).optional(),
   questions: z
     .array(questionFormPrisma)
-    .optional()
-    .transform((questions) => ({ create: questions })),
+    .transform((questions) => ({ create: questions }))
+    .optional(),
 })
 
 export const questionsSchemaForPrisma = z
