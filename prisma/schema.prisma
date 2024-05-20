@@ -70,8 +70,11 @@ model Option {
 }
 
 model QuestionType {
-  id        Int        @id @default(autoincrement())
-  name      String
+  id    Int    @id @default(autoincrement())
+  name  String
+  label String
+  icon  String
+
   questions Question[]
 }
 

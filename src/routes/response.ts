@@ -2,13 +2,13 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { paginationSchema } from '../utils/schemas/pagination'
-import { ResponseSchema } from '../utils/schemas/form'
+import { responseSchema } from '../utils/schemas/response'
 
 const paramsSchema = z.object({
-  questionId: z.string().uuid().optional(),
-  responseId: z.string().uuid().optional(),
-  sessionId: z.string().uuid().optional(),
-  formId: z.string().uuid().optional(),
+  questionId: z.coerce.number().int().positive().optional(),
+  responseId: z.coerce.number().int().positive().optional(),
+  sessionId: z.coerce.number().int().positive().optional(),
+  formId: z.coerce.number().int().positive().optional(),
 })
 
 export async function responseRoutes(app: FastifyInstance) {
@@ -43,7 +43,7 @@ export async function responseRoutes(app: FastifyInstance) {
     return responses
   })
   app.post('/response', async (request, reply) => {
-    const response = ResponseSchema.parse(request.body)
+    const response = responseSchema.parse(request.body)
 
     const question = await prisma.question.findUnique({
       where: { id: response.questionId },

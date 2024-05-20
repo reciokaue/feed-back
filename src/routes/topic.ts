@@ -19,7 +19,6 @@ export async function topicRoutes(app: FastifyInstance) {
       take: pageSize,
       skip: pageSize * page,
     })
-    // const formatedTopics = topics.map((topic) => topic.name)
 
     return reply.status(200).send(topics)
   })
@@ -34,11 +33,15 @@ export async function topicRoutes(app: FastifyInstance) {
       data: topics.map((name) => ({ name })),
       skipDuplicates: true,
     })
+    const newTopics = await prisma.topic.findMany({
+      where: {},
+      take: -topics.length,
+    })
 
-    reply.status(201).send()
+    reply.status(201).send(newTopics)
   })
   app.delete('/topics', async (request, reply) => {
-    const bodySchema = z.array(z.string())
+    const bodySchema = z.array(z.number())
     const topics = bodySchema.parse(request.body)
 
     if (topics.length === 0)
@@ -46,7 +49,7 @@ export async function topicRoutes(app: FastifyInstance) {
 
     await prisma.topic.deleteMany({
       where: {
-        name: { in: topics },
+        id: { in: topics },
       },
     })
 

@@ -1,29 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { z } from 'zod'
+import { topicSchema } from './topic'
+import {
+  questionSchema,
+  questionSchemaCreate,
+  questionSchemaUpdate,
+} from './question'
 
-export const ResponseSchema = z.object({
-  id: z.coerce.number().positive().int().optional(),
-  value: z.coerce.number().positive().int().optional(),
-  questionId: z.string().uuid(),
-  sessionId: z.coerce.number().positive().int().optional(),
-})
-
-export const OptionSchema = z.object({
-  id: z.coerce.number().positive().int().optional(),
-  text: z.string(),
-  index: z.number().optional().default(0),
-  questionId: z.coerce.number().positive().int().optional(),
-})
-
-export const QuestionSchema = z.object({
-  id: z.coerce.number().positive().int().optional(),
-  text: z.string(),
-  type: z.string(),
-  options: z.array(OptionSchema).optional(),
-  index: z.number().optional().default(0),
-})
-
-export const FormSchema = z.object({
+export const formSchema = z.object({
   id: z.coerce.number().positive().int().optional(),
   name: z.string(),
   about: z.string().nullable().optional(),
@@ -31,54 +14,25 @@ export const FormSchema = z.object({
   isPublic: z.boolean().optional().default(false),
   createdAt: z.string().nullable().optional(),
   userId: z.coerce.number().positive().int().optional(),
-  topics: z
-    .array(
-      z.object({
-        id: z.number(),
-        name: z.string(),
-      }),
-    )
-    .optional(),
+  topics: z.array(topicSchema).optional(),
   logoUrl: z.string().nullable().optional(),
-  questions: z.array(QuestionSchema).optional(),
+  questions: z.array(questionSchema).optional(),
 })
 
-export const SessionSchema = z.object({
-  id: z.coerce.number().positive().int().optional(),
-  createdAt: z.date(),
-  responses: z.array(ResponseSchema),
-  formId: z.coerce.number().positive().int().optional(),
-})
-
-export const questionFormPrisma = QuestionSchema.extend({
-  typeId: z.coerce.number().positive().int().optional(),
-  formId: z.coerce.number().positive().int().optional(),
-  options: z
-    .array(OptionSchema)
-    .optional()
-    .transform((options) => ({
-      updateMany: options?.map((op) => ({
-        where: { id: op.id },
-        data: op,
-      })),
-    })),
-})
-
-export const FormSchemaForPrisma = FormSchema.extend({
+export const formSchemaCreate = formSchema.extend({
   topics: z.array(z.number()).optional(),
   questions: z
-    .array(questionFormPrisma)
+    .array(questionSchemaCreate)
     .transform((questions) => ({ create: questions }))
     .optional(),
 })
 
-export const questionsSchemaForPrisma = z
-  .array(questionFormPrisma)
-  .optional()
-  .transform((questions) => ({
-    create: questions ? questions.map(({ id, formId, ...rest }) => rest) : [],
-  }))
+export const formSchemaUpdate = formSchema.extend({
+  topics: z.array(z.number()).optional(),
+  questions: z
+    .array(questionSchemaUpdate)
+    .transform((questions) => ({ updateMany: questions }))
+    .optional(),
+})
 
-export type QuestionSchema = z.input<typeof QuestionSchema>
-export type FormSchema = z.input<typeof FormSchema>
-export type OptionSchema = z.input<typeof OptionSchema>
+export type formSchemaType = z.input<typeof formSchema>

@@ -3,7 +3,10 @@ import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import { paginationSchema } from '../utils/schemas/pagination'
-import { questionFormPrisma } from '../utils/schemas/form'
+import {
+  questionSchemaCreate,
+  questionSchemaUpdate,
+} from '../utils/schemas/question'
 import { questionSelect } from '../utils/selects/question'
 
 const paramsSchema = z.object({
@@ -66,7 +69,7 @@ export async function questionRoutes(app: FastifyInstance) {
     return questions
   })
   app.post('/question', async (request: jwtRequest, reply) => {
-    const question = questionFormPrisma.parse(request.body)
+    const question = questionSchemaCreate.parse(request.body)
 
     if (question?.formId) {
       const formExists = await prisma.form.findUnique({
@@ -85,7 +88,7 @@ export async function questionRoutes(app: FastifyInstance) {
     return newQuestion
   })
   app.put('/question/:id', async (request, reply) => {
-    const question = questionFormPrisma.parse(request.body)
+    const question = questionSchemaUpdate.parse(request.body)
     const { id } = paramsSchema.parse(request.params)
 
     console.log(question.options, id)

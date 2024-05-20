@@ -2,11 +2,8 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
-import {
-  FormSchemaForPrisma,
-  questionsSchemaForPrisma,
-} from '../utils/schemas/form'
 import { paginationSchema } from '../utils/schemas/pagination'
+import { formSchemaCreate, formSchemaUpdate } from '../utils/schemas/form'
 import { formatForm } from '../utils/format/form'
 import { formDetailSelect, formSelect } from '../utils/selects/form'
 
@@ -52,7 +49,8 @@ export async function formRoutes(app: FastifyInstance) {
   app.post('/form', async (request: jwtRequest, reply) => {
     try {
       const { id: baseFormId } = paramsSchema.parse(request.query)
-      const form = FormSchemaForPrisma.parse(request.body)
+      const form = formSchemaCreate.parse(request.body)
+      console.log(form)
 
       form.userId = request.user?.sub
       const topics = form.topics
@@ -80,7 +78,7 @@ export async function formRoutes(app: FastifyInstance) {
   })
   app.put('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
-    const form = FormSchemaForPrisma.parse(request.body)
+    const form = formSchemaUpdate.parse(request.body)
 
     const topics = form.topics
     delete form.topics
