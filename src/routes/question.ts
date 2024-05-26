@@ -88,16 +88,25 @@ export async function questionRoutes(app: FastifyInstance) {
     return newQuestion
   })
   app.put('/question/:id', async (request, reply) => {
-    const question = questionSchemaUpdate.parse(request.body)
-    const { id } = paramsSchema.parse(request.params)
+    try {
+      const question = questionSchemaUpdate.parse(request.body)
+      const { id } = paramsSchema.parse(request.params)
 
-    console.log(question.options, id)
-    await prisma.question.update({
-      where: { id },
-      data: question as any,
-    })
+      const newQuestion = await prisma.question.update({
+        where: { id },
+        data: question as any,
+        include: {
+          options: true,
+          questionType: true,
+        },
+      })
 
-    return reply.status(200).send()
+      return reply.status(200).send(newQuestion)
+    } catch (e) {
+      const question = questionSchemaUpdate.parse(request.body)
+
+      return reply.status(500).send({ e, question })
+    }
   })
   app.delete('/question/:id', async (request, reply) => {
     const { id } = paramsSchema.parse(request.params)
