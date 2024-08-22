@@ -10,4 +10,9 @@ export const questionSelect = {
       text: true,
     },
   },
+  _count: {
+    select: {
+      responses: true,
+    },
+  },
 }

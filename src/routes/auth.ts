@@ -42,7 +42,7 @@ export async function authRoutes(app: FastifyInstance) {
     const bodySchema = z.object({
       password: z.string().min(6).max(30),
       email: z.string().email(),
-      name: z.string().max(50),
+      name: z.string().max(50).min(3),
     })
     const { password, email, name } = bodySchema.parse(request.body)
     const hashedPassword = await bcrypt.hash(password, 10)

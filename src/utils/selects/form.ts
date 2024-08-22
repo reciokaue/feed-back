@@ -33,8 +33,17 @@ export const formDetailSelect = {
   logoUrl: true,
   isPublic: true,
   createdAt: true,
+  _count: {
+    select: {
+      questions: true,
+      sessions: true,
+    },
+  },
   questions: {
     select: questionSelect,
+    orderBy: {
+      index: 'asc',
+    },
   },
   formTopics: {
     select: {

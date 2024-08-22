@@ -14,11 +14,11 @@ export const questionSchemaCreate = questionSchema
   .extend({
     typeId: z.coerce.number().positive().int().optional(),
     options: z
-      .array(optionSchema)
+      .array(optionSchema.omit({ id: true, questionId: true }))
       .transform((options) => ({ create: options }))
       .optional(),
   })
-  .omit({ questionType: true })
+  .omit({ questionType: true, formId: true, id: true })
 
 export const questionSchemaUpdate = questionSchema
   .extend({

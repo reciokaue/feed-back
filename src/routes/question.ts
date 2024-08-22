@@ -42,7 +42,8 @@ export async function questionRoutes(app: FastifyInstance) {
       },
       select: questionSelect,
     })
-    if (!questions) return reply.status(404).send({ message: 'Form not found' })
+    if (!questions)
+      return reply.status(404).send({ message: 'Formulário não encontrado' })
 
     return questions
   })
@@ -64,7 +65,8 @@ export async function questionRoutes(app: FastifyInstance) {
       skip: pageSize * page,
       select: { ...questionSelect, formId: true },
     })
-    if (!questions) return reply.status(404).send({ message: 'Form not found' })
+    if (!questions)
+      return reply.status(404).send({ message: 'Formulário não encontrado' })
 
     return questions
   })
@@ -76,9 +78,9 @@ export async function questionRoutes(app: FastifyInstance) {
         where: { id: question.formId },
       })
       if (!formExists)
-        return reply.status(404).send({ message: 'form does not not exist' })
+        return reply.status(404).send({ message: 'Este fomulário não existe' })
       if (formExists.userId !== request.user?.sub)
-        return reply.status(400).send({ message: 'This is not your form' })
+        return reply.status(400).send({ message: 'Este não é seu formulário' })
     }
 
     const newQuestion = await prisma.question.create({

@@ -6,6 +6,7 @@ import { paginationSchema } from '../utils/schemas/pagination'
 import { formSchemaCreate, formSchemaUpdate } from '../utils/schemas/form'
 import { formatForm } from '../utils/format/form'
 import { formDetailSelect, formSelect } from '../utils/selects/form'
+import { questionSchemaCreate } from '../utils/schemas/question'
 
 const paramsSchema = z.object({
   id: z.coerce.number().positive().int().optional(),
@@ -18,6 +19,7 @@ export async function formRoutes(app: FastifyInstance) {
     const { page, pageSize, query, isPublic } = paginationSchema.parse(
       request.query,
     )
+    console.log(query)
 
     const forms = await prisma.form.findMany({
       where: {
@@ -42,7 +44,8 @@ export async function formRoutes(app: FastifyInstance) {
       select: formDetailSelect,
     })
 
-    if (!form) return reply.status(404).send({ message: 'Form not found' })
+    if (!form)
+      return reply.status(404).send({ message: 'Formulário não encontrado' })
 
     return formatForm(form)
   })
@@ -50,11 +53,13 @@ export async function formRoutes(app: FastifyInstance) {
     try {
       const { id: baseFormId } = paramsSchema.parse(request.query)
       const form = formSchemaCreate.parse(request.body)
-      console.log(form)
 
       form.userId = request.user?.sub
       const topics = form.topics
       delete form.topics
+
+      // console.log(JSON.stringify(await getBaseFormQuestions(baseFormId, reply)))
+      // return
 
       const newForm = await prisma.form.create({
         data: {
@@ -73,7 +78,7 @@ export async function formRoutes(app: FastifyInstance) {
       reply.status(200).send(newForm)
     } catch (err) {
       console.log(err)
-      return reply.status(400).send({ message: 'Invalid data', error: err })
+      return reply.status(400).send({ message: 'Dados inválidos', error: err })
     }
   })
   app.put('/form/:id', async (request: jwtRequest, reply) => {
@@ -89,7 +94,7 @@ export async function formRoutes(app: FastifyInstance) {
       select: formSelect,
     })
     if (!formExists)
-      return reply.status(404).send({ message: 'Form not found' })
+      return reply.status(404).send({ message: 'Formulário não encontrado' })
 
     const topicsIds = formExists.formTopics.map(
       (formTopic) => formTopic.topic.id,
@@ -118,15 +123,55 @@ export async function formRoutes(app: FastifyInstance) {
     const form = await prisma.form.findUnique({
       where: { id },
     })
-    if (!form) return reply.status(404).send({ message: 'Form not found' })
+    if (!form)
+      return reply.status(404).send({ message: 'Formulário não encontrado' })
     if (form.userId !== request?.user?.sub && request.user?.access === 0)
-      return reply.status(400).send({ message: 'Not your form' })
+      return reply.status(400).send({ message: 'Este não é o seu formulário' })
 
     await prisma.form.delete({
       where: { id: form.id },
     })
 
     return form
+  })
+
+  app.post('/form/:id/question-order', async (request: jwtRequest, reply) => {
+    const bodySchema = z.object({
+      from: z.number().int(),
+      to: z.number().int(),
+    })
+    const { id } = paramsSchema.parse(request.params)
+    const { from, to } = bodySchema.parse(request.body)
+    console.log(from, to)
+    if (from === to) return reply.send()
+
+    const questions = await prisma.question.findMany({
+      where: {
+        formId: id,
+        index: {
+          in: [from, to],
+        },
+      },
+      select: {
+        id: true,
+        index: true,
+      },
+      orderBy: {
+        index: 'asc',
+      },
+    })
+    await prisma.question.update({
+      where: { id: questions[0].id },
+      data: { index: questions[1].index },
+    })
+    await prisma.question.update({
+      where: { id: questions[1].id },
+      data: { index: questions[0].index },
+    })
+
+    return reply.send({ from, to, id, questions })
+
+    // const { id: baseFormId } = paramsSchema.parse(request.query)
   })
 }
 
@@ -141,9 +186,12 @@ async function getBaseFormQuestions(id: number, reply: any) {
       },
     },
   })
-  if (!baseForm) reply.status(404).send({ message: 'Base form not found' })
+  if (!baseForm)
+    reply.status(404).send({ message: 'Base formulário não encontrado' })
 
   return {
-    questions: questionsSchemaForPrisma.parse(baseForm?.questions),
+    questions: {
+      create: z.array(questionSchemaCreate).parse(baseForm?.questions),
+    },
   }
 }
