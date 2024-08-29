@@ -7,9 +7,15 @@ import { formSchemaCreate, formSchemaUpdate } from '../utils/schemas/form'
 import { formatForm } from '../utils/format/form'
 import { formDetailSelect, formSelect } from '../utils/selects/form'
 import { questionSchemaCreate } from '../utils/schemas/question'
+import { insertFormTopicsSQLite } from '../utils/insertFormTopicsSQLite'
+import {
+  insertMultipleQuestionsSQLite,
+  insertQuestionSQLite,
+} from '../utils/insertQuestionSQLite'
 
 const paramsSchema = z.object({
   id: z.coerce.number().positive().int().optional(),
+  modelId: z.coerce.number().positive().int().optional(),
 })
 
 export async function formRoutes(app: FastifyInstance) {
@@ -51,34 +57,78 @@ export async function formRoutes(app: FastifyInstance) {
   })
   app.post('/form', async (request: jwtRequest, reply) => {
     try {
-      const { id: baseFormId } = paramsSchema.parse(request.query)
       const form = formSchemaCreate.parse(request.body)
-
       form.userId = request.user?.sub
+
       const topics = form.topics
       delete form.topics
 
-      // console.log(JSON.stringify(await getBaseFormQuestions(baseFormId, reply)))
-      // return
-
       const newForm = await prisma.form.create({
-        data: {
-          ...form,
-          ...(baseFormId && (await getBaseFormQuestions(baseFormId, reply))),
-        } as any,
+        data: form as any,
       })
-      await prisma.formTopic.createMany({
-        data: topics?.map((topicId) => ({
-          formId: newForm.id,
-          topicId,
-        })) as any,
-        skipDuplicates: true,
-      })
+
+      // Verifica o tipo de banco de dados
+      const dbType = process.env.DATABASE_TYPE || 'mysql' // Assumindo que o tipo de banco de dados está em DATABASE_TYPE no .env
+
+      if (dbType === 'sqlite') {
+        if (topics && topics.length > 0) {
+          await insertFormTopicsSQLite(topics, newForm.id)
+        }
+      } else {
+        await prisma.formTopic?.createMany({
+          data: topics?.map((topicId) => ({
+            formId: newForm.id,
+            topicId,
+          })) as any,
+          skipDuplicates: true,
+        })
+      }
 
       reply.status(200).send(newForm)
     } catch (err) {
       console.log(err)
-      return reply.status(400).send({ message: 'Dados inválidos', error: err })
+      return reply.status(400).send({ message: 'Erro inesperado', error: err })
+    }
+  })
+  app.post('/form/:id/model/:modelId', async (request: jwtRequest, reply) => {
+    try {
+      const { id: formId, modelId } = paramsSchema.parse(request.params)
+
+      const baseForm = await prisma.form.findUnique({
+        where: { id: modelId },
+        include: {
+          questions: {
+            include: {
+              options: true,
+            },
+          },
+        },
+      })
+
+      if (!baseForm || !formId) {
+        return reply
+          .status(404)
+          .send({ message: 'Formulário modelo não encontrado' })
+      }
+
+      const dbType = process.env.DATABASE_TYPE || 'mysql'
+
+      if (dbType === 'sqlite') {
+        await insertMultipleQuestionsSQLite(baseForm.questions, +formId)
+      } else {
+        await prisma.question?.createMany({
+          data: baseForm.questions.map(({ formId }, question) => ({
+            formId: Number(formId),
+            ...question,
+          })),
+          skipDuplicates: true,
+        })
+      }
+
+      reply.status(200).send({ message: 'Questões copiadas com sucesso!' })
+    } catch (err) {
+      console.log(err)
+      return reply.status(400).send({ message: 'Erro inesperado', error: err })
     }
   })
   app.put('/form/:id', async (request: jwtRequest, reply) => {

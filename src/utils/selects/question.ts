@@ -3,6 +3,7 @@ export const questionSelect = {
   text: true,
   index: true,
   questionType: true,
+  required: true,
   options: {
     select: {
       id: true,

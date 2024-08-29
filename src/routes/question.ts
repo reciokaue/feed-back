@@ -8,6 +8,7 @@ import {
   questionSchemaUpdate,
 } from '../utils/schemas/question'
 import { questionSelect } from '../utils/selects/question'
+import { insertQuestionSQLite } from '../utils/insertQuestionSQLite'
 
 const paramsSchema = z.object({
   id: z.coerce.number().int().positive().optional(),
@@ -71,23 +72,41 @@ export async function questionRoutes(app: FastifyInstance) {
     return questions
   })
   app.post('/question', async (request: jwtRequest, reply) => {
-    const question = questionSchemaCreate.parse(request.body)
+    try {
+      const question = questionSchemaCreate.parse(request.body)
 
-    if (question?.formId) {
-      const formExists = await prisma.form.findUnique({
-        where: { id: question.formId },
-      })
-      if (!formExists)
-        return reply.status(404).send({ message: 'Este fomulário não existe' })
-      if (formExists.userId !== request.user?.sub)
-        return reply.status(400).send({ message: 'Este não é seu formulário' })
+      if (question?.formId) {
+        const formExists = await prisma.form.findUnique({
+          where: { id: question.formId },
+        })
+
+        if (!formExists)
+          return reply
+            .status(404)
+            .send({ message: 'Este formulário não existe' })
+
+        if (formExists.userId !== request.user?.sub)
+          return reply
+            .status(400)
+            .send({ message: 'Este não é seu formulário' })
+      }
+
+      const dbType = process.env.DATABASE_TYPE || 'mysql'
+      let newQuestion
+
+      if (dbType === 'sqlite') {
+        newQuestion = await insertQuestionSQLite(question)
+      } else {
+        newQuestion = await prisma.question.create({
+          data: question as any,
+        })
+      }
+
+      reply.status(201).send(newQuestion)
+    } catch (err) {
+      console.log(err)
+      reply.status(400).send({ message: 'Erro inesperado', error: err })
     }
-
-    const newQuestion = await prisma.question.create({
-      data: question as any,
-    })
-
-    return newQuestion
   })
   app.put('/question/:id', async (request, reply) => {
     try {

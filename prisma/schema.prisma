@@ -2,15 +2,15 @@ generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-
 // datasource db {
-//   provider = "sqlite"
-//   url      = "file:./dev.db"
+//   provider = "mysql"
+//   url      = env("DATABASE_URL")
 // }
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
 
 generator erd {
   provider                  = "prisma-erd-generator"
@@ -47,9 +47,10 @@ model Form {
 }
 
 model Question {
-  id    Int    @id @default(autoincrement())
-  text  String
-  index Int
+  id       Int     @id @default(autoincrement())
+  text     String
+  index    Int
+  required Boolean @default(true)
 
   typeId       Int?
   questionType QuestionType? @relation(fields: [typeId], references: [id])

@@ -9,21 +9,23 @@ export const questionSchema = z.object({
   formId: z.coerce.number().positive().int().optional(),
   questionType: questionTypeSchema.optional(),
   options: z.array(optionSchema).optional(),
+  required: z.boolean().optional().default(true),
 })
 export const questionSchemaCreate = questionSchema
   .extend({
-    typeId: z.coerce.number().positive().int().optional(),
     options: z
       .array(optionSchema.omit({ id: true, questionId: true }))
       .transform((options) => ({ create: options }))
       .optional(),
   })
-  .omit({ questionType: true, formId: true, id: true })
+  .transform(({ questionType, ...rest }) => ({
+    ...rest,
+    typeId: questionType?.id,
+  }))
 
 export const questionSchemaUpdate = questionSchema
   .extend({
     id: z.coerce.number().positive().int().optional(),
-    typeId: z.coerce.number().positive().int().optional(),
     deletedOptionsIds: z.array(z.number()).optional(),
     options: z
       .array(optionSchemaUpdate)
@@ -38,8 +40,10 @@ export const questionSchemaUpdate = questionSchema
       }))
       .optional(),
   })
-  .transform(({ deletedOptionsIds, options, ...rest }) => ({
+
+  .transform(({ deletedOptionsIds, options, questionType, ...rest }) => ({
     ...rest,
+    typeId: questionType?.id,
     options: {
       ...options,
       delete: deletedOptionsIds?.map((deletedOptionId) => ({
