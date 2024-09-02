@@ -14,10 +14,8 @@ export async function insertQuestionSQLite(question: any, newFormId: number) {
         typeId: question.typeId || undefined, // Conectando ao questionType, se existir
       },
     })
-    console.log(question)
     // Se existirem opções para a questão, cria as promessas para a inserção das opções
     if (question.options && question.options.length > 0) {
-      console.log('TEM')
       const optionPromises = question.options.map((option: any) => {
         return prisma.option.create({
           data: {

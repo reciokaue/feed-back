@@ -21,11 +21,10 @@ generator erd {
 }
 
 model User {
-  id          Int    @id @default(autoincrement())
-  name        String
-  email       String @unique
-  password    String
-  accessLevel Int    @default(0)
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String
 
   forms Form[] @relation("UserForms")
 }

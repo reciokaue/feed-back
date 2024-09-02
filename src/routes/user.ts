@@ -2,7 +2,6 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
-import { verifyAccessLevel } from '../middlewares/accessLevel'
 import { userSchema } from '../utils/schemas/user'
 import bcrypt from 'bcrypt'
 
@@ -13,9 +12,7 @@ const paramsSchema = z.object({
 export async function userRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
-  app.get('/users', async (request: jwtRequest, reply) => {
-    verifyAccessLevel(request, reply)
-
+  app.get('/users', async (request: jwtRequest) => {
     const paramsSchema = z.object({
       page: z.number().default(0),
       pageSize: z.number().default(15),

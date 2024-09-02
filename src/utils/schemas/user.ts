@@ -5,5 +5,4 @@ export const userSchema = z.object({
   name: z.string().optional(),
   email: z.string().email().optional(),
   password: z.string().optional(),
-  accessLevel: z.number().int().default(0).optional(),
 })

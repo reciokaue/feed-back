@@ -30,11 +30,9 @@ export async function authRoutes(app: FastifyInstance) {
         .status(statusCode.badRequest)
         .send(statusMessage.invalidPassword)
 
-    const token = jwt.sign(
-      { name: user.name, email, sub: user.id, access: user.accessLevel },
-      secret,
-      { expiresIn: expires },
-    )
+    const token = jwt.sign({ name: user.name, email, sub: user.id }, secret, {
+      expiresIn: expires,
+    })
 
     return token
   })
@@ -62,11 +60,9 @@ export async function authRoutes(app: FastifyInstance) {
           .send(statusMessage.emailAlreadyExistis)
       })
 
-    const token = jwt.sign(
-      { name: user.name, email, sub: user.id, access: user.accessLevel },
-      secret,
-      { expiresIn: expires },
-    )
+    const token = jwt.sign({ name: user.name, email, sub: user.id }, secret, {
+      expiresIn: expires,
+    })
 
     return token
   })
