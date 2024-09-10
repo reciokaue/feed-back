@@ -80,13 +80,13 @@ export async function authRoutes(app: FastifyInstance) {
         if (err || !decoded)
           return reply.status(400).send({ message: 'Invalid token' })
 
-        const { sub, name, email, access } = decoded as never
+        const { sub, name, email } = decoded as never
         const userExists = await prisma.user.findUniqueOrThrow({
           where: { id: sub },
         })
 
         if (userExists) {
-          const newToken = jwt.sign({ name, email, sub, access }, secret, {
+          const newToken = jwt.sign({ name, email, sub }, secret, {
             expiresIn: expires,
           })
           return newToken

@@ -6,12 +6,8 @@ import { paginationSchema } from '../utils/schemas/pagination'
 import { formSchemaCreate, formSchemaUpdate } from '../utils/schemas/form'
 import { formatForm } from '../utils/format/form'
 import { formDetailSelect, formSelect } from '../utils/selects/form'
-import { questionSchemaCreate } from '../utils/schemas/question'
 import { insertFormTopicsSQLite } from '../utils/insertFormTopicsSQLite'
-import {
-  insertMultipleQuestionsSQLite,
-  insertQuestionSQLite,
-} from '../utils/insertQuestionSQLite'
+import { insertMultipleQuestionsSQLite } from '../utils/insertQuestionSQLite'
 
 const paramsSchema = z.object({
   id: z.coerce.number().positive().int().optional(),
@@ -22,25 +18,42 @@ export async function formRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
   app.get('/forms', async (request: jwtRequest) => {
-    const { page, pageSize, query, isPublic } = paginationSchema.parse(
+    const { page, pageSize, query, isPublic, topics } = paginationSchema.parse(
       request.query,
     )
-    console.log(query)
+
+    const filters: any = {
+      ...(query && {
+        OR: [{ name: { contains: query } }, { about: { contains: query } }],
+      }),
+      ...(isPublic ? { isPublic: true } : { userId: request.user?.sub }),
+      ...(topics &&
+        topics.length > 0 && {
+          formTopics: {
+            some: {
+              topicId: {
+                in: topics, // Filtra os formulários que têm os tópicos selecionados
+              },
+            },
+          },
+        }),
+    }
+
+    const totalCount = await prisma.form.count({
+      where: filters,
+    })
 
     const forms = await prisma.form.findMany({
-      where: {
-        ...(query && {
-          OR: [{ name: { contains: query } }, { about: { contains: query } }],
-        }),
-        ...(isPublic ? { isPublic: true } : { userId: request.user?.sub }),
-      },
+      where: filters,
       take: pageSize,
       skip: pageSize * page,
       select: formSelect,
     })
-    const formated = forms?.map((form) => formatForm(form))
 
-    return formated
+    return {
+      meta: { page, pageSize, totalCount },
+      forms: forms?.map((form) => formatForm(form)),
+    }
   })
   app.get('/form/:id', async (request, reply) => {
     const { id } = paramsSchema.parse(request.params)
@@ -175,7 +188,7 @@ export async function formRoutes(app: FastifyInstance) {
     })
     if (!form)
       return reply.status(404).send({ message: 'Formulário não encontrado' })
-    if (form.userId !== request?.user?.sub && request.user?.access === 0)
+    if (form.userId !== request?.user?.sub)
       return reply.status(400).send({ message: 'Este não é o seu formulário' })
 
     await prisma.form.delete({
@@ -187,61 +200,43 @@ export async function formRoutes(app: FastifyInstance) {
 
   app.post('/form/:id/question-order', async (request: jwtRequest, reply) => {
     const bodySchema = z.object({
-      from: z.number().int(),
-      to: z.number().int(),
+      newOrder: z.array(z.number().int()),
     })
+
     const { id } = paramsSchema.parse(request.params)
-    const { from, to } = bodySchema.parse(request.body)
-    console.log(from, to)
-    if (from === to) return reply.send()
+    const { newOrder } = bodySchema.parse(request.body)
 
     const questions = await prisma.question.findMany({
-      where: {
-        formId: id,
-        index: {
-          in: [from, to],
-        },
-      },
-      select: {
-        id: true,
-        index: true,
-      },
-      orderBy: {
-        index: 'asc',
-      },
-    })
-    await prisma.question.update({
-      where: { id: questions[0].id },
-      data: { index: questions[1].index },
-    })
-    await prisma.question.update({
-      where: { id: questions[1].id },
-      data: { index: questions[0].index },
+      where: { formId: id },
+      select: { id: true },
+      orderBy: { index: 'asc' },
     })
 
-    return reply.send({ from, to, id, questions })
+    if (questions.length !== newOrder.length)
+      return reply.status(400).send({
+        error: 'O número de questões não corresponde à nova ordem fornecida.',
+      })
 
-    // const { id: baseFormId } = paramsSchema.parse(request.query)
+    const allQuestionsExist = questions.every((question) =>
+      newOrder.includes(question.id),
+    )
+    if (!allQuestionsExist)
+      return reply.status(400).send({
+        error:
+          'Algum dos ids selecionados não existe nas questões do formulário',
+      })
+
+    const updatePromises = newOrder.map((questionId, i) => {
+      return prisma.question.update({
+        where: { id: questionId },
+        data: { index: i },
+      })
+    })
+    await Promise.all(updatePromises)
+
+    return reply.send({
+      success: true,
+      message: 'Ordem das questões atualizada com sucesso.',
+    })
   })
-}
-
-async function getBaseFormQuestions(id: number, reply: any) {
-  const baseForm = await prisma.form.findUnique({
-    where: { id },
-    include: {
-      questions: {
-        include: {
-          options: true,
-        },
-      },
-    },
-  })
-  if (!baseForm)
-    reply.status(404).send({ message: 'Base formulário não encontrado' })
-
-  return {
-    questions: {
-      create: z.array(questionSchemaCreate).parse(baseForm?.questions),
-    },
-  }
 }

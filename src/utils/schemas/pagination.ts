@@ -14,4 +14,8 @@ export const paginationSchema = z.object({
     .transform((val) => val.toLowerCase() === 'true')
     .default('false'),
   query: z.string().default(''),
+  topics: z
+    .string()
+    .optional()
+    .transform((val) => (val ? val.split(',').map(Number) : [])), // Transforma a string de tópicos em um array de números
 })
