@@ -3,10 +3,7 @@ import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import { paginationSchema } from '../utils/schemas/pagination'
-import {
-  questionSchemaCreate,
-  questionSchemaUpdate,
-} from '../utils/schemas/question'
+import { questionSchemaCreate } from '../utils/schemas/question'
 import { questionSelect } from '../utils/selects/question'
 import { insertQuestionSQLite } from '../utils/insertQuestionSQLite'
 
@@ -110,23 +107,22 @@ export async function questionRoutes(app: FastifyInstance) {
   })
   app.put('/question/:id', async (request, reply) => {
     try {
-      const question = questionSchemaUpdate.parse(request.body)
+      const question = questionSchemaCreate.parse(request.body)
+      console.log(question)
+
       const { id } = paramsSchema.parse(request.params)
 
       const newQuestion = await prisma.question.update({
         where: { id },
         data: question as any,
         include: {
-          options: true,
           questionType: true,
         },
       })
 
       return reply.status(200).send(newQuestion)
     } catch (e) {
-      const question = questionSchemaUpdate.parse(request.body)
-
-      return reply.status(500).send({ e, question })
+      return reply.status(500).send({ e })
     }
   })
   app.delete('/question/:id', async (request, reply) => {

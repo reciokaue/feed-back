@@ -11,17 +11,12 @@ export const questionSchema = z.object({
   options: z.array(optionSchema).optional(),
   required: z.boolean().optional().default(true),
 })
-export const questionSchemaCreate = questionSchema
-  .extend({
-    options: z
-      .array(optionSchema.omit({ id: true, questionId: true }))
-      .transform((options) => ({ create: options }))
-      .optional(),
-  })
-  .transform(({ questionType, ...rest }) => ({
+export const questionSchemaCreate = questionSchema.transform(
+  ({ questionType, options, ...rest }) => ({
     ...rest,
     typeId: questionType?.id,
-  }))
+  }),
+)
 
 export const questionSchemaUpdate = questionSchema
   .extend({

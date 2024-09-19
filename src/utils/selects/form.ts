@@ -42,7 +42,7 @@ export const formDetailSelect = {
   questions: {
     select: questionSelect,
     orderBy: {
-      index: 'asc',
+      index: 'asc' as const,
     },
   },
   formTopics: {
