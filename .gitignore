@@ -1,3 +1,4 @@
 node_modules/
 todo.md
 prisma/dev.db
+.env
