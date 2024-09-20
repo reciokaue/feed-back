@@ -4,6 +4,7 @@ export const questionSelect = {
   index: true,
   questionType: true,
   required: true,
+  formId: true,
   options: {
     select: {
       id: true,

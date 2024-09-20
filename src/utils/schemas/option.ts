@@ -1,7 +1,7 @@
 import { boolean, z } from 'zod'
 
 export const optionSchema = z.object({
-  id: z.coerce.number().positive().int().optional(),
+  id: z.coerce.number().int().optional(),
   text: z.string(),
   index: z.number().optional().default(0),
   questionId: z.coerce.number().positive().int().optional(),

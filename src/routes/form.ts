@@ -6,8 +6,8 @@ import { paginationSchema } from '../utils/schemas/pagination'
 import { formSchemaCreate, formSchemaUpdate } from '../utils/schemas/form'
 import { formatForm } from '../utils/format/form'
 import { formDetailSelect, formSelect } from '../utils/selects/form'
-import { insertFormTopicsSQLite } from '../utils/insertFormTopicsSQLite'
-import { insertMultipleQuestionsSQLite } from '../utils/insertQuestionSQLite'
+import { questionSchemaUpdate } from '../utils/schemas/question'
+import { getOptionsPutStatus } from '../utils/getOptiosPutStatus'
 
 const paramsSchema = z.object({
   id: z.coerce.number().positive().int().optional(),
@@ -80,22 +80,13 @@ export async function formRoutes(app: FastifyInstance) {
         data: form as any,
       })
 
-      // Verifica o tipo de banco de dados
-      const dbType = process.env.DATABASE_TYPE || 'mysql' // Assumindo que o tipo de banco de dados está em DATABASE_TYPE no .env
-
-      if (dbType === 'sqlite') {
-        if (topics && topics.length > 0) {
-          await insertFormTopicsSQLite(topics, newForm.id)
-        }
-      } else {
-        await prisma.formTopic?.createMany({
-          data: topics?.map((topicId) => ({
-            formId: newForm.id,
-            topicId,
-          })) as any,
-          skipDuplicates: true,
-        })
-      }
+      await prisma.formTopic?.createMany({
+        data: topics?.map((topicId) => ({
+          formId: newForm.id,
+          topicId,
+        })) as any,
+        skipDuplicates: true,
+      })
 
       reply.status(200).send(newForm)
     } catch (err) {
@@ -124,19 +115,13 @@ export async function formRoutes(app: FastifyInstance) {
           .send({ message: 'Formulário modelo não encontrado' })
       }
 
-      const dbType = process.env.DATABASE_TYPE || 'mysql'
-
-      if (dbType === 'sqlite') {
-        await insertMultipleQuestionsSQLite(baseForm.questions, +formId)
-      } else {
-        await prisma.question?.createMany({
-          data: baseForm.questions.map(({ formId }, question) => ({
-            formId: Number(formId),
-            ...question,
-          })),
-          skipDuplicates: true,
-        })
-      }
+      await prisma.question?.createMany({
+        data: baseForm.questions.map(({ formId }, question) => ({
+          formId: Number(formId),
+          ...(question as any),
+        })) as any,
+        skipDuplicates: true,
+      })
 
       reply.status(200).send({ message: 'Questões copiadas com sucesso!' })
     } catch (err) {
@@ -197,7 +182,6 @@ export async function formRoutes(app: FastifyInstance) {
 
     return form
   })
-
   app.post('/form/:id/question-order', async (request: jwtRequest, reply) => {
     const bodySchema = z.object({
       newOrder: z.array(z.number().int()),
