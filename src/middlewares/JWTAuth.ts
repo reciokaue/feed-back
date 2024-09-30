@@ -6,7 +6,7 @@ import { jwtUser } from '../utils/types/jwtUser'
 const secret = process.env.SECRET || ''
 
 export interface jwtRequest extends FastifyRequest {
-  user?: jwtUser
+  user?: jwtUser | any
 }
 
 export async function verifyJwt(

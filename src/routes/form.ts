@@ -5,9 +5,13 @@ import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import { paginationSchema } from '../utils/schemas/pagination'
 import { formSchemaCreate, formSchemaUpdate } from '../utils/schemas/form'
 import { formatForm } from '../utils/format/form'
-import { formDetailSelect, formSelect } from '../utils/selects/form'
+import {
+  formCompareSelect,
+  formDetailSelect,
+  formSelect,
+} from '../utils/selects/form'
+import { getArrayChanges } from '../utils/getArrayChanges'
 import { questionSchemaUpdate } from '../utils/schemas/question'
-import { getOptionsPutStatus } from '../utils/getOptiosPutStatus'
 
 const paramsSchema = z.object({
   id: z.coerce.number().positive().int().optional(),
@@ -164,6 +168,57 @@ export async function formRoutes(app: FastifyInstance) {
         },
       } as any,
     })
+  })
+  app.put('/form/:id/questions', async (request: jwtRequest, reply) => {
+    try {
+      const { id: formId } = paramsSchema.parse(request.params)
+      const questions = z.array(questionSchemaUpdate).parse(request.body)
+
+      if (questions.length === 0)
+        return reply
+          .status(404)
+          .send({ message: 'Não há questões para atualizar' })
+      if (questions[0].formId !== formId)
+        return reply
+          .status(404)
+          .send({ message: 'Questão não pertence ao formulário' })
+
+      const form = await prisma.form.findUnique({
+        where: { id: formId },
+        select: formCompareSelect,
+      })
+
+      if (!form)
+        return reply.status(404).send({ message: 'Formulário não encontrado' })
+      if (form?.userId !== request?.user?.sub)
+        return reply
+          .status(400)
+          .send({ message: 'Este não é o seu formulário' })
+
+      const formQuestionsToUpdate = getArrayChanges(
+        questions || [],
+        form.questions,
+      )
+
+      await prisma.form.update({
+        where: { id: formId },
+        data: {
+          questions: formQuestionsToUpdate,
+        },
+      })
+
+      return reply.status(200).send({
+        message: 'Questões atualizadas com sucesso',
+        data: {
+          formQuestionsToUpdate,
+          questions,
+          form,
+        },
+      })
+    } catch (err) {
+      console.log(err)
+      return reply.status(400).send({ message: 'Erro inesperado', error: err })
+    }
   })
   app.delete('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)

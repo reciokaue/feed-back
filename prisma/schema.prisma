@@ -51,8 +51,7 @@ model Question {
   formId       Int
   form         Form          @relation(fields: [formId], references: [id], onDelete: Cascade)
 
-  options   Option[]
-  responses Response[]
+  options Option[]
 }
 
 model Option {
@@ -61,7 +60,8 @@ model Option {
   index      Int
   questionId Int
 
-  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  Response Response[]
 }
 
 model QuestionType {
@@ -90,8 +90,8 @@ model Response {
   questionId Int
   optionId   Int
 
-  session  Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  option  Option  @relation(fields: [optionId], references: [id], onDelete: Cascade)
 }
 
 model Topic {

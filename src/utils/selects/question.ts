@@ -12,9 +12,24 @@ export const questionSelect = {
       text: true,
     },
   },
-  _count: {
+  // _count: {
+  //   select: {
+  //     // responses: true,
+  //   },
+  // },
+}
+export const questionCompareSelect = {
+  id: true,
+  text: true,
+  index: true,
+  typeId: true,
+  required: true,
+  formId: true,
+  options: {
     select: {
-      responses: true,
+      id: true,
+      index: true,
+      text: true,
     },
   },
 }

@@ -1,4 +1,4 @@
-import { questionSelect } from './question'
+import { questionCompareSelect, questionSelect } from './question'
 
 export const formSelect = {
   id: true,
@@ -53,6 +53,17 @@ export const formDetailSelect = {
           name: true,
         },
       },
+    },
+  },
+}
+
+export const formCompareSelect = {
+  id: true,
+  userId: true,
+  questions: {
+    select: questionCompareSelect,
+    orderBy: {
+      index: 'asc' as const,
     },
   },
 }

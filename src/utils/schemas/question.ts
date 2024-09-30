@@ -23,8 +23,13 @@ export const questionSchemaCreate = questionSchema.transform(
 
 export const questionSchemaUpdate = questionSchema.transform(
   ({ questionType, ...rest }) => ({
-    ...rest,
+    id: rest.id,
+    text: rest.text,
+    index: rest.index,
     typeId: questionType?.id,
+    required: rest.required,
+    formId: rest.formId,
+    options: rest.options,
   }),
 )
 
