@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import { paginationSchema } from '../utils/schemas/pagination'
-import { formSchemaCreate, formSchemaUpdate } from '../utils/schemas/form'
+import { formSchema, formSchemaCreate, formSchemaUpdate } from '../utils/schemas/form'
 import { formatForm } from '../utils/format/form'
 import {
   formCompareSelect,
@@ -135,7 +135,7 @@ export async function formRoutes(app: FastifyInstance) {
   })
   app.put('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
-    const form = formSchemaUpdate.parse(request.body)
+    const form = formSchema.parse(request.body)
 
     const topics = form.topics
     delete form.topics
@@ -147,25 +147,15 @@ export async function formRoutes(app: FastifyInstance) {
     })
     if (!formExists)
       return reply.status(404).send({ message: 'Formulário não encontrado' })
-
-    const topicsIds = formExists.formTopics.map(
-      (formTopic) => formTopic.topic.id,
-    )
-    const deletedTopics = topicsIds
-      ?.filter((topic) => !topics?.includes(topic))
-      .map((topic) => ({ topicId: topic, formId: id }))
-    const newTopics = topics
-      ?.filter((topic) => !topicsIds?.includes(topic))
-      .map((topic) => ({ topicId: topic }))
-
+    
+    const deletedTopics = 
+      topics?.length === 0? {}: getArrayChanges(topics || [], formExists.formTopics)
+ 
     await prisma.form.update({
       where: { id },
       data: {
         ...form,
-        formTopics: {
-          deleteMany: deletedTopics,
-          createMany: { data: newTopics },
-        },
+        formTopics: deletedTopics
       } as any,
     })
   })

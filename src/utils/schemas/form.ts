@@ -28,11 +28,11 @@ export const formSchemaCreate = formSchema.extend({
 })
 
 export const formSchemaUpdate = formSchema.extend({
-  topics: z.array(z.number()).optional(),
-  questions: z
-    .array(questionSchemaUpdate)
-    .transform((questions) => ({ updateMany: questions }))
-    .optional(),
+  // topics: z.array(z.number()).optional(),
+  // questions: z
+  //   .array(questionSchemaUpdate)
+  //   .transform((questions) => ({ updateMany: questions }))
+  //   .optional(),
 })
 
 export type formSchemaType = z.input<typeof formSchema>
