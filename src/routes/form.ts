@@ -136,8 +136,6 @@ export async function formRoutes(app: FastifyInstance) {
   app.put('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
     const form = formSchema.parse(request.body)
-
-    const topics = form.topics
     delete form.topics
     delete form.questions
 
@@ -147,18 +145,48 @@ export async function formRoutes(app: FastifyInstance) {
     })
     if (!formExists)
       return reply.status(404).send({ message: 'Formulário não encontrado' })
-    
-    const deletedTopics = 
-      topics?.length === 0? {}: getArrayChanges(topics || [], formExists.formTopics)
- 
+
     await prisma.form.update({
       where: { id },
       data: {
         ...form,
-        formTopics: deletedTopics
       } as any,
     })
   })
+  app.put('/form/:id/topics', async (request: jwtRequest, reply) => {
+    const { id } = paramsSchema.parse(request.params)
+    const form = formSchema.parse(request.body)
+
+    const topics = form.topics
+
+    const formExists = await prisma.form.findUnique({
+      where: { id },
+      select: formSelect,
+    })
+    if (!formExists)
+      return reply.status(404).send({ message: 'Formulário não encontrado' })
+
+    const topicsIds = formExists.formTopics.map(
+      (formTopic) => formTopic.topic.id,
+    )
+    const deletedTopics = topicsIds
+      ?.filter((topic: any) => !topics?.includes(topic))
+      .map((topic: any) => ({ topicId: topic, formId: id }))
+    const newTopics = topics
+      ?.filter((topic: any) => !topicsIds?.includes(topic))
+      .map((topic: any) => ({ topicId: topic }))
+
+    await prisma.form.update({
+      where: { id },
+      data: {
+        formTopics: {
+          deleteMany: deletedTopics,
+          createMany: { data: newTopics },
+        },
+      } as any,
+    })
+  })
+  
   app.put('/form/:id/questions', async (request: jwtRequest, reply) => {
     try {
       const { id: formId } = paramsSchema.parse(request.params)
