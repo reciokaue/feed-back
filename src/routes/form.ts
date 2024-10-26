@@ -84,13 +84,19 @@ export async function formRoutes(app: FastifyInstance) {
         data: form as any,
       })
 
-      await prisma.formTopic?.createMany({
-        data: topics?.map((topicId) => ({
-          formId: newForm.id,
-          topicId,
-        })) as any,
-        skipDuplicates: true,
+      prisma.formTopic.createMany({
+        data: [
+          {formId, topicId}
+        ]
       })
+
+      // await prisma.formTopic?.createMany({
+      //   data: topics?.map((topicId) => ({
+      //     formId: newForm.id,
+      //     topicId,
+      //   })) as any,
+      //   skipDuplicates: true,
+      // })
 
       reply.status(200).send(newForm)
     } catch (err) {
@@ -133,25 +139,38 @@ export async function formRoutes(app: FastifyInstance) {
       return reply.status(400).send({ message: 'Erro inesperado', error: err })
     }
   })
+
   app.put('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
     const form = formSchema.parse(request.body)
-    delete form.topics
-    delete form.questions
-
-    const formExists = await prisma.form.findUnique({
+   
+    const formExists = formatForm(await prisma.form.findUnique({
       where: { id },
-      select: formSelect,
-    })
+      select: formDetailSelect,
+    }))
     if (!formExists)
       return reply.status(404).send({ message: 'Formulário não encontrado' })
+    if (formExists?.userId !== request?.user?.sub)
+      return reply.status(400).send({ message: 'Este não é o seu formulário' })
 
-    await prisma.form.update({
-      where: { id },
-      data: {
-        ...form,
-      } as any,
-    })
+    // const formQuestionsToUpdate = getArrayChanges(
+    //   form.questions || [],
+    //   formExists.questions,
+    // )
+    // const formTopicsToUpdate = getArrayChanges(
+    //   form.topics || [],
+    //   formExists?.topics,
+    // )
+
+    reply.send(formExists)
+
+
+    // await prisma.form.update({
+    //   where: { id },
+    //   data: {
+    //     ...form,
+    //   } as any,
+    // })
   })
   app.put('/form/:id/topics', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
@@ -238,6 +257,9 @@ export async function formRoutes(app: FastifyInstance) {
       return reply.status(400).send({ message: 'Erro inesperado', error: err })
     }
   })
+
+
+
   app.delete('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
 
@@ -254,46 +276,5 @@ export async function formRoutes(app: FastifyInstance) {
     })
 
     return form
-  })
-  app.post('/form/:id/question-order', async (request: jwtRequest, reply) => {
-    const bodySchema = z.object({
-      newOrder: z.array(z.number().int()),
-    })
-
-    const { id } = paramsSchema.parse(request.params)
-    const { newOrder } = bodySchema.parse(request.body)
-
-    const questions = await prisma.question.findMany({
-      where: { formId: id },
-      select: { id: true },
-      orderBy: { index: 'asc' },
-    })
-
-    if (questions.length !== newOrder.length)
-      return reply.status(400).send({
-        error: 'O número de questões não corresponde à nova ordem fornecida.',
-      })
-
-    const allQuestionsExist = questions.every((question) =>
-      newOrder.includes(question.id),
-    )
-    if (!allQuestionsExist)
-      return reply.status(400).send({
-        error:
-          'Algum dos ids selecionados não existe nas questões do formulário',
-      })
-
-    const updatePromises = newOrder.map((questionId, i) => {
-      return prisma.question.update({
-        where: { id: questionId },
-        data: { index: i },
-      })
-    })
-    await Promise.all(updatePromises)
-
-    return reply.send({
-      success: true,
-      message: 'Ordem das questões atualizada com sucesso.',
-    })
   })
 }

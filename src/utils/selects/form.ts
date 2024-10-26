@@ -27,6 +27,7 @@ export const formSelect = {
 }
 export const formDetailSelect = {
   id: true,
+  userId: true,
   name: true,
   about: true,
   active: true,

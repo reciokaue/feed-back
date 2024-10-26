@@ -53,7 +53,6 @@ function getDeletedItems(newArray: any[], oldArray: any[]) {
 
 function formatForUpdate(array: any[]) {
   if (array.length === 0) return []
-  console.log(array)
 
   return {
     update: array.map((item) => {
@@ -99,9 +98,6 @@ export function getArrayChanges(newArray: any[], oldArray: any[]) {
 
   const ItJustChangedIndexes = justChangeIndexes(newArray, oldArray)
   if (ItJustChangedIndexes) return formatForUpdate(newArray)
-
-  console.log(newArray, oldArray)
-  console.log(getDeletedItems(newArray, oldArray))
 
   const AlteredItems = formatForUpdate(getAlteredItems(newArray, oldArray))
   const DeletedItems = formatForDeleting(getDeletedItems(newArray, oldArray))
