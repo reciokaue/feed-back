@@ -7,17 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// generator zod {
-//   provider = "zod-prisma-types"
-// }
+generator zod {
+  provider         = "zod-prisma-types"
+  useMultipleFiles = true // default is false
+  writeBarrelFiles = true // default is true
+}
 
-// generator erd {
-//   provider                  = "prisma-erd-generator"
-//   output                    = "ERD.svg"
-//   theme                     = "neutral"
-//   disableEmoji              = true
-//   includeRelationFromFields = true
-// }
+generator erd {
+  provider                  = "prisma-erd-generator"
+  output                    = "ERD.svg"
+  theme                     = "neutral"
+  disableEmoji              = true
+  includeRelationFromFields = true
+}
 
 model User {
   id       Int    @id @default(autoincrement())
@@ -25,23 +27,26 @@ model User {
   email    String @unique
   password String
 
-  forms Form[] @relation("UserForms")
+  forms Form[]
 }
 
 model Form {
-  id        Int      @id @default(autoincrement())
-  name      String
-  about     String?
-  active    Boolean  @default(true)
-  logoUrl   String?
-  isPublic  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  userId    Int
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  logoUrl     String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
-  user       User        @relation(fields: [userId], references: [id], name: "UserForms", onDelete: Cascade)
-  questions  Question[]
-  sessions   Session[]
-  formTopics FormTopic[]
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: NoAction)
+
+  questions Question[]
+  sessions  Session[]
 }
 
 model Question {
@@ -52,10 +57,12 @@ model Question {
 
   typeId       Int?
   questionType QuestionType? @relation(fields: [typeId], references: [id])
-  formId       Int
-  form         Form          @relation(fields: [formId], references: [id], onDelete: Cascade)
 
-  options Option[]
+  formId Int
+  form   Form @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  options   Option[]
+  responses Response[]
 }
 
 model Option {
@@ -64,8 +71,8 @@ model Option {
   index      Int
   questionId Int
 
-  question Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  Response Response[]
+  question  Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  responses Response[]
 }
 
 model QuestionType {
@@ -80,37 +87,33 @@ model QuestionType {
 model Session {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  formId    Int
 
-  form      Form       @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId Int
+  form   Form @relation(fields: [formId], references: [id], onDelete: Cascade)
+
   responses Response[]
 }
 
 model Response {
-  id         Int      @id @default(autoincrement())
-  text       String
-  createdAt  DateTime @default(now())
-  sessionId  Int
+  id    Int    @id @default(autoincrement())
+  value String
+
+  sessionId Int
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  optionId Int
+  option   Option @relation(fields: [optionId], references: [id], onDelete: NoAction)
+
   questionId Int
-  optionId   Int
-
-  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  option  Option  @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: NoAction)
 }
 
-model Topic {
-  id   Int    @id @default(autoincrement())
-  name String
+model Category {
+  id            Int        @id @default(autoincrement())
+  label         String
+  parentId      Int? // Permite `null` para categorias principais
+  parent        Category?  @relation("CategoryToSubcategories", fields: [parentId], references: [id], onDelete: Cascade)
+  subcategories Category[] @relation("CategoryToSubcategories")
 
-  formTopics FormTopic[]
-}
-
-model FormTopic {
-  formId  Int
-  topicId Int
-
-  form  Form  @relation(fields: [formId], references: [id], onDelete: Cascade)
-  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
-
-  @@id([formId, topicId])
+  forms Form[]
 }

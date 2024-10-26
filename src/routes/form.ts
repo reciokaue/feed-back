@@ -22,25 +22,19 @@ export async function formRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
   app.get('/forms', async (request: jwtRequest) => {
-    const { page, pageSize, query, isPublic, topics } = paginationSchema.parse(
+    const { page, pageSize, query, isPublic, category } = paginationSchema.parse(
       request.query,
     )
 
     const filters: any = {
       ...(query && {
-        OR: [{ name: { contains: query } }, { about: { contains: query } }],
+        OR: [
+          { name: { contains: query } },
+          { about: { contains: query } }
+        ],
       }),
       ...(isPublic ? { isPublic: true } : { userId: request.user?.sub }),
-      ...(topics &&
-        topics.length > 0 && {
-          formTopics: {
-            some: {
-              topicId: {
-                in: topics, // Filtra os formulários que têm os tópicos selecionados
-              },
-            },
-          },
-        }),
+      ...(category && {category: {id: category}}),
     }
 
     const totalCount = await prisma.form.count({
