@@ -174,7 +174,7 @@ export async function formRoutes(app: FastifyInstance) {
       .map((topic: any) => ({ topicId: topic, formId: id }))
     const newTopics = topics
       ?.filter((topic: any) => !topicsIds?.includes(topic))
-      .map((topic: any) => ({ topicId: topic }))
+      .map((topic: any) => ({ topicId: topic.id }))
 
     await prisma.form.update({
       where: { id },

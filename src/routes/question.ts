@@ -123,10 +123,10 @@ export async function questionRoutes(app: FastifyInstance) {
       const newQuestionData = {
         ...question,
         ...(question.options && {
-          options: getArrayChanges({
-            oldArray: oldQuestion?.options as any,
-            newArray: question?.options as any,
-          }),
+          options: getArrayChanges(
+            oldQuestion?.options as any,
+            question?.options as any,
+          ),
         }),
       }
 

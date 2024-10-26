@@ -4,7 +4,7 @@ import { verifyJwt } from '../middlewares/JWTAuth'
 import { questionTypeSchema } from '../utils/schemas/questionType'
 
 export async function questionTypeRoutes(app: FastifyInstance) {
-  app.addHook('onRequest', verifyJwt)
+  // app.addHook('onRequest', verifyJwt)
 
   app.get('/question-types', async (request, reply) => {
     const questionTypes = await prisma.questionType.findMany()

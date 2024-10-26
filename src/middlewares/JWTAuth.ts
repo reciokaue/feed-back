@@ -1,12 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { FastifyReply, FastifyRequest } from 'fastify'
-import jwt from 'jsonwebtoken'
-import { jwtUser } from '../utils/types/jwtUser'
+import { FastifyReply, FastifyRequest } from 'fastify';
+import jwt from 'jsonwebtoken';
+import { jwtUser } from '../utils/types/jwtUser';
 
-const secret = process.env.SECRET || ''
+const secret = process.env.SECRET || '';
 
 export interface jwtRequest extends FastifyRequest {
-  user?: jwtUser | any
+  user?: jwtUser | any;
+}
+
+const publicPaths = [
+  '/questions/form/:formId',
+];
+
+function isPublicPath(url: string): boolean {
+  return publicPaths.some((path) => {
+    const pathSegments = path.split('/');
+    const urlSegments = url.split('/');
+
+    if (pathSegments.length !== urlSegments.length) return false;
+
+    return pathSegments.every((segment, index) =>
+      segment.startsWith(':') || segment === urlSegments[index]
+    );
+  });
 }
 
 export async function verifyJwt(
@@ -14,23 +31,28 @@ export async function verifyJwt(
   reply: FastifyReply,
 ) {
   try {
-    const bearerHeader = request.headers.authorization
-    const token =
-      typeof bearerHeader !== 'undefined' && bearerHeader.split(' ')[1]
+    if (isPublicPath(request.url)) {
+      return;
+    }
 
-    if (!token) return reply.status(404).send({ message: 'Missing token' })
+    const bearerHeader = request.headers.authorization;
+    const token =
+      typeof bearerHeader !== 'undefined' && bearerHeader.split(' ')[1];
+
+    if (!token) return reply.status(404).send({ message: 'Missing token' });
 
     jwt.verify(token, secret, (err, decoded) => {
-      if (err)
+      if (err) {
         return reply
           .status(403)
-          .send({ message: 'Failed to authenticate', error: err })
+          .send({ message: 'Failed to authenticate', error: err });
+      }
 
-      request.user = decoded as jwtUser
-    })
+      request.user = decoded as jwtUser;
+    });
   } catch (err) {
     return reply
       .status(401)
-      .send({ message: 'Informe o token de acesso devidamente.' })
+      .send({ message: 'Informe o token de acesso devidamente.' });
   }
 }

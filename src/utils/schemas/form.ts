@@ -8,7 +8,7 @@ import {
 
 export const formSchema = z.object({
   id: z.coerce.number().positive().int().optional(),
-  name: z.string(),
+  name: z.string().optional(),
   about: z.string().nullable().optional(),
   active: z.boolean().nullable().optional().default(false),
   isPublic: z.boolean().optional().default(false),
