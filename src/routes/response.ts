@@ -1,8 +1,8 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
-import { paginationSchema } from '../utils/schemas/pagination'
-import { responseSchema } from '../utils/schemas/response'
+import { paginationSchema } from '../utils/paginationSchema'
+import { ResponseSchema } from '../../prisma/models/Response'
 
 const paramsSchema = z.object({
   questionId: z.coerce.number().int().positive().optional(),
@@ -43,7 +43,7 @@ export async function responseRoutes(app: FastifyInstance) {
     return responses
   })
   app.post('/response', async (request, reply) => {
-    const response = responseSchema.parse(request.body)
+    const response = ResponseSchema.parse(request.body)
 
     const question = await prisma.question.findUnique({
       where: { id: response.questionId },

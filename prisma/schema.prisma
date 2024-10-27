@@ -7,11 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-generator zod {
-  provider         = "zod-prisma-types"
-  useMultipleFiles = true // default is false
-  writeBarrelFiles = true // default is true
-}
+// generator zod {
+//   provider         = "zod-prisma-types"
+//   useMultipleFiles = true // default is false
+//   writeBarrelFiles = true // default is true
+// }
 
 generator erd {
   provider                  = "prisma-erd-generator"
@@ -111,6 +111,7 @@ model Response {
 model Category {
   id            Int        @id @default(autoincrement())
   label         String
+  icon          String
   parentId      Int? // Permite `null` para categorias principais
   parent        Category?  @relation("CategoryToSubcategories", fields: [parentId], references: [id], onDelete: Cascade)
   subcategories Category[] @relation("CategoryToSubcategories")

@@ -2,16 +2,14 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
-import { paginationSchema } from '../utils/schemas/pagination'
-import { formSchema, formSchemaCreate, formSchemaUpdate } from '../utils/schemas/form'
-import { formatForm } from '../utils/format/form'
+import { paginationSchema } from '../utils/paginationSchema'
 import {
   formCompareSelect,
   formDetailSelect,
+  FormSchema,
   formSelect,
-} from '../utils/selects/form'
+} from '../../prisma/models/Form'
 import { getArrayChanges } from '../utils/getArrayChanges'
-import { questionSchemaUpdate } from '../utils/schemas/question'
 
 const paramsSchema = z.object({
   id: z.coerce.number().positive().int().optional(),
@@ -22,7 +20,7 @@ export async function formRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
   app.get('/forms', async (request: jwtRequest) => {
-    const { page, pageSize, query, isPublic, category } = paginationSchema.parse(
+    const { page, pageSize, query, isPublic, categoryId } = paginationSchema.parse(
       request.query,
     )
 
@@ -34,7 +32,7 @@ export async function formRoutes(app: FastifyInstance) {
         ],
       }),
       ...(isPublic ? { isPublic: true } : { userId: request.user?.sub }),
-      ...(category && {category: {id: category}}),
+      ...(categoryId && {category: {id: categoryId}}),
     }
 
     const totalCount = await prisma.form.count({
@@ -48,10 +46,7 @@ export async function formRoutes(app: FastifyInstance) {
       select: formSelect,
     })
 
-    return {
-      meta: { page, pageSize, totalCount },
-      forms: forms?.map((form) => formatForm(form)),
-    }
+    return {meta: { page, pageSize, totalCount }, forms}
   })
   app.get('/form/:id', async (request, reply) => {
     const { id } = paramsSchema.parse(request.params)
@@ -68,29 +63,15 @@ export async function formRoutes(app: FastifyInstance) {
   })
   app.post('/form', async (request: jwtRequest, reply) => {
     try {
-      const form = formSchemaCreate.parse(request.body)
-      form.userId = request.user?.sub
-
-      const topics = form.topics
-      delete form.topics
+      const form = FormSchema.partial().parse(request.body)
 
       const newForm = await prisma.form.create({
-        data: form as any,
+        data: {
+          ...form,
+          userId: request.user.sub,
+          categoryId: form?.category?.id || form.categoryId
+        } as any,
       })
-
-      prisma.formTopic.createMany({
-        data: [
-          {formId, topicId}
-        ]
-      })
-
-      // await prisma.formTopic?.createMany({
-      //   data: topics?.map((topicId) => ({
-      //     formId: newForm.id,
-      //     topicId,
-      //   })) as any,
-      //   skipDuplicates: true,
-      // })
 
       reply.status(200).send(newForm)
     } catch (err) {
@@ -98,6 +79,8 @@ export async function formRoutes(app: FastifyInstance) {
       return reply.status(400).send({ message: 'Erro inesperado', error: err })
     }
   })
+
+  // vai pro questions copiar questriones
   app.post('/form/:id/model/:modelId', async (request: jwtRequest, reply) => {
     try {
       const { id: formId, modelId } = paramsSchema.parse(request.params)
@@ -136,9 +119,9 @@ export async function formRoutes(app: FastifyInstance) {
 
   app.put('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
-    const form = formSchema.parse(request.body)
+    const form = FormSchema.parse(request.body)
    
-    const formExists = formatForm(await prisma.form.findUnique({
+    const formExists = (await prisma.form.findUnique({
       where: { id },
       select: formDetailSelect,
     }))

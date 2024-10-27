@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { verifyJwt } from '../middlewares/JWTAuth'
-import { optionSchema } from '../utils/schemas/option'
+import { OptionSchema } from '../../prisma/models/Option'
 
 const paramsSchema = z.object({
   questionId: z.coerce.number().positive().int().optional(),
@@ -22,7 +22,7 @@ export async function optionRoutes(app: FastifyInstance) {
     return options
   })
   app.post('/option', async (request) => {
-    const option = optionSchema.parse(request.body)
+    const option = OptionSchema.parse(request.body)
 
     const newOption = await prisma.option.create({
       data: option as any,
@@ -32,7 +32,7 @@ export async function optionRoutes(app: FastifyInstance) {
   })
   app.put(`/option/:optionId`, async (request) => {
     const { optionId } = paramsSchema.parse(request.params)
-    const option = optionSchema.parse(request.body)
+    const option = OptionSchema.parse(request.body)
 
     await prisma.option.update({
       where: { id: optionId },

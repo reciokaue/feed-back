@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { QuestionTypeSchema } from './QuestionType';
+import { OptionSchema } from './Option';
 
 /////////////////////////////////////////
 // QUESTION SCHEMA
@@ -9,12 +11,35 @@ export const QuestionSchema = z.object({
   text: z.string(),
   index: z.number().int(),
   required: z.boolean(),
-  typeId: z.number().int().nullable(),
   formId: z.number().int(),
+
+  questionType: QuestionTypeSchema.optional(),
+  options: z.array(OptionSchema).optional()
 })
 
 export type Question = z.infer<typeof QuestionSchema>
 
+export const questionSchemaCreate = QuestionSchema.transform(
+  ({ questionType, options, ...rest }) => ({
+    ...rest,
+    typeId: questionType?.id,
+    options: {
+      create: options?.map((option) => option),
+    },
+  }),
+)
+
+export const questionSchemaUpdate = QuestionSchema.transform(
+  ({ questionType, ...rest }) => ({
+    id: rest.id,
+    text: rest.text,
+    index: rest.index,
+    typeId: questionType?.id,
+    required: rest.required,
+    formId: rest.formId,
+    options: rest.options,
+  }),
+)
 
 export const questionSelect = {
   id: true,

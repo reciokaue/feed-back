@@ -2,16 +2,11 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
-import { paginationSchema } from '../utils/schemas/pagination'
-import {
-  questionSchemaCreate,
-  questionSchemaUpdate,
-} from '../utils/schemas/question'
-import {
-  questionCompareSelect,
-  questionSelect,
-} from '../utils/selects/question'
+
+
 import { getArrayChanges } from '../utils/getArrayChanges'
+import { questionCompareSelect, questionSchemaCreate, questionSchemaUpdate, questionSelect } from '../../prisma/models/Question'
+import { paginationSchema } from '../utils/paginationSchema'
 
 const paramsSchema = z.object({
   id: z.coerce.number().int().positive().optional(),

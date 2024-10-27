@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { questionCompareSelect, questionSelect } from './Question';
+import { questionCompareSelect, QuestionSchema, questionSchemaCreate, questionSelect } from './Question';
+import { CategorySchema } from './Category';
 
 /////////////////////////////////////////
 // FORM SCHEMA
@@ -11,13 +12,23 @@ export const FormSchema = z.object({
   description: z.string().nullable(),
   active: z.boolean(),
   logoUrl: z.string().nullable(),
-  isPublic: z.boolean(),
-  createdAt: z.coerce.date(),
-  userId: z.number().int(),
-  categoryId: z.number().int().nullable(),
+  isPublic: z.boolean().nullable().default(true),
+  createdAt: z.coerce.date().nullable(),
+  userId: z.number().int().nullable(),
+  category: CategorySchema.optional(),
+  categoryId: z.number().optional(),
+  questions: z.array(QuestionSchema).optional(),
 })
 
 export type Form = z.infer<typeof FormSchema>
+
+export const formSchemaCreate = FormSchema.transform( ({category}) => ({
+  categoryId: category.id,
+  questions: z
+    .array(questionSchemaCreate)
+    .transform((questions) => ({ create: questions }))
+    .optional(),
+}))
 
 export const formSelect =  {
   id: true,

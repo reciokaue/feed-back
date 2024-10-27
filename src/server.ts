@@ -4,7 +4,7 @@ import fastify from 'fastify'
 import cors from '@fastify/cors'
 
 import { questionRoutes } from './routes/question'
-import { topicRoutes } from './routes/topic'
+import { categoryRoutes } from './routes/category'
 import { authRoutes } from './routes/auth'
 import { userRoutes } from './routes/user'
 import { formRoutes } from './routes/form'
@@ -17,7 +17,7 @@ const app = fastify()
 
 app.register(authRoutes)
 app.register(userRoutes)
-app.register(topicRoutes)
+app.register(categoryRoutes)
 app.register(formRoutes)
 app.register(questionRoutes)
 app.register(optionRoutes)
