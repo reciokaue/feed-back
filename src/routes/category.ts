@@ -9,10 +9,13 @@ export async function categoryRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
   app.get('/category', async (request, reply) => {
-    const { page, pageSize, query } = paginationSchema.parse(request.query)
+    const { page, pageSize, query, categoryId } = paginationSchema.parse(request.query)
 
     const category = await prisma.category.findMany({
-      where: {...(query && {label: { contains: query }})},
+      where: {
+        ...(query && { label: { contains: query } }),
+        ...(categoryId && { parentId: categoryId })
+      },
       take: pageSize,
       skip: pageSize * page,
     })
@@ -27,7 +30,7 @@ export async function categoryRoutes(app: FastifyInstance) {
       return reply.status(400).send({ message: 'Dados insuficientes' })
     }
     await prisma.category.createMany({
-      data: category.map(({label, icon}) => ({ label, icon })) as any,
+      data: category.map(({ label, icon }) => ({ label, icon })) as any,
       skipDuplicates: true,
     })
 
