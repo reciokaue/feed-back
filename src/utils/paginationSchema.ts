@@ -5,5 +5,5 @@ export const paginationSchema = z.object({
   pageSize: z.string().transform((val) => +val).default('6'),
   isPublic: z.string().transform((val) => val.toLowerCase() === 'true').default('false'),
   query: z.string().default(''),
-  categoryId: z.string().optional()
+  categoryId: z.coerce.number().optional()
 })

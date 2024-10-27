@@ -123,6 +123,7 @@ export async function formRoutes(app: FastifyInstance) {
     delete form.id
     delete form.userId
     delete form.category
+    delete form.createdAt
    
     const formExists = (await prisma.form.findUnique({
       where: { id },
@@ -143,6 +144,7 @@ export async function formRoutes(app: FastifyInstance) {
       category: { connect: {id:  category}},
       ...({questions: formQuestionsToUpdate})
     }
+    // return reply.send(data)
 
     await prisma.form.update({
       where: { id },

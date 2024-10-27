@@ -56,7 +56,7 @@ export const questionSelect = {
     },
   },
 }
-export const questionCompareSelect = {
+export const questionResponsesSelect = {
   id: true,
   text: true,
   index: true,
@@ -70,4 +70,15 @@ export const questionCompareSelect = {
       text: true,
     },
   },
+  _count: {
+    select: {
+      responses: true
+    }
+  },
+  responses: {
+    select: {
+      id: true,
+      value: true,
+    }
+  }
 }

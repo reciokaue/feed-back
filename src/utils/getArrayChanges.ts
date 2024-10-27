@@ -69,7 +69,7 @@ function formatForUpdate(array: any[]) {
     }),
   }
 }
-function formatForAdding(array: any[]) {
+export function formatForAdding(array: any[]) {
   if (array.length === 0) return {create: []}
 
   return {
@@ -77,9 +77,9 @@ function formatForAdding(array: any[]) {
       delete item.id
       delete item.formId
 
-      // if(item?.options){
-      //   item.options = formatForAdding(item.options || [])
-      // }
+      if(item?.options){
+        item.options = formatForAdding(item.options || [])
+      }
       if (item?.questionType) {
         item.typeId = item.questionType.id
         delete item.questionType
@@ -101,6 +101,7 @@ export function getArrayChanges(newArray: any[], oldArray: any[]) {
 
   const ItJustChangedIndexes = justChangeIndexes(newArray, oldArray)
   if (ItJustChangedIndexes) return formatForUpdate(newArray)
+
 
   const AlteredItems = formatForUpdate(getAlteredItems(newArray, oldArray))
   const DeletedItems = formatForDeleting(getDeletedItems(newArray, oldArray))
