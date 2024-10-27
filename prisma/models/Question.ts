@@ -10,11 +10,11 @@ export const QuestionSchema = z.object({
   id: z.number().int(),
   text: z.string(),
   index: z.number().int(),
-  required: z.boolean(),
+  required: z.boolean().default(false),
   formId: z.number().int(),
 
   questionType: QuestionTypeSchema.optional(),
-  options: z.array(OptionSchema).optional()
+  options: z.array(OptionSchema.partial()).optional()
 })
 
 export type Question = z.infer<typeof QuestionSchema>

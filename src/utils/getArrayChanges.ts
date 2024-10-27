@@ -39,7 +39,7 @@ function getAddedItems(newArray: any[], oldArray: any[]) {
 
     return {
       ...item,
-      options: getArrayChanges(item.options, []),
+      options: formatForAdding(item.options),
     }
   })
 }
@@ -70,16 +70,19 @@ function formatForUpdate(array: any[]) {
   }
 }
 function formatForAdding(array: any[]) {
-  if (array.length === 0) return []
+  if (array.length === 0) return {create: []}
 
   return {
     create: array.map((item) => {
       delete item.id
       delete item.formId
 
+      // if(item?.options){
+      //   item.options = formatForAdding(item.options || [])
+      // }
       if (item?.questionType) {
         item.typeId = item.questionType.id
-        delete item.id
+        delete item.questionType
       }
       return item
     }),
@@ -94,7 +97,7 @@ function formatForDeleting(array: any[]) {
 }
 
 export function getArrayChanges(newArray: any[], oldArray: any[]) {
-  if (JSON.stringify(newArray) === JSON.stringify(oldArray)) return {}
+  if (JSON.stringify(newArray) === JSON.stringify(oldArray)) return []
 
   const ItJustChangedIndexes = justChangeIndexes(newArray, oldArray)
   if (ItJustChangedIndexes) return formatForUpdate(newArray)

@@ -17,18 +17,11 @@ export const FormSchema = z.object({
   userId: z.number().int().nullable(),
   category: CategorySchema.optional(),
   categoryId: z.number().optional(),
-  questions: z.array(QuestionSchema).optional(),
+  questions: z.array(QuestionSchema.partial()).optional(),
 })
 
 export type Form = z.infer<typeof FormSchema>
 
-export const formSchemaCreate = FormSchema.transform( ({category}) => ({
-  categoryId: category.id,
-  questions: z
-    .array(questionSchemaCreate)
-    .transform((questions) => ({ create: questions }))
-    .optional(),
-}))
 
 export const formSelect =  {
   id: true,
@@ -41,7 +34,8 @@ export const formSelect =  {
   category: {
     select: {
       id: true,
-      label: true
+      label: true,
+      icon: true,
     }
   },
   _count: {
@@ -60,11 +54,12 @@ export const formDetailSelect = {
   logoUrl: true,
   isPublic: true,
   createdAt: true,
-  _count: {
+  category: {
     select: {
-      questions: true,
-      sessions: true,
-    },
+      id: true,
+      label: true,
+      icon: true,
+    }
   },
   questions: {
     select: questionSelect,
@@ -72,21 +67,10 @@ export const formDetailSelect = {
       index: 'asc' as const,
     },
   },
-  category: {
+  _count: {
     select: {
-      id: true,
-      label: true
-    }
-  },
-}
-
-export const formCompareSelect = {
-  id: true,
-  userId: true,
-  questions: {
-    select: questionCompareSelect,
-    orderBy: {
-      index: 'asc' as const,
+      questions: true,
+      sessions: true,
     },
   },
 }
