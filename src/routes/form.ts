@@ -72,19 +72,17 @@ export async function formRoutes(app: FastifyInstance) {
           select: questionSelect
         })
 
-        // form.questions = formatForAdding(questions) as any
-        return reply.send(questions)
-      }
+        form.questions = formatForAdding(questions) as any
+        }
+      const newForm = await prisma.form.create({
+        data: {
+          ...form,
+          userId: request.user.sub,
+          categoryId: form?.category?.id || form.categoryId
+        } as any,
+      })
 
-      // const newForm = await prisma.form.create({
-      //   data: {
-      //     ...form,
-      //     userId: request.user.sub,
-      //     categoryId: form?.category?.id || form.categoryId
-      //   } as any,
-      // })
-
-      // reply.status(200).send(newForm)
+      reply.status(200).send({})
     } catch (err) {
       console.log(err)
       return reply.status(400).send({ message: 'Erro inesperado', error: err })

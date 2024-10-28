@@ -8,12 +8,12 @@ import { CategorySchema } from '../../prisma/models/Category'
 export async function categoryRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
-  app.get('/category', async (request, reply) => {
-    const { page, pageSize, query, categoryId } = paginationSchema.parse(request.query)
+  app.get('/categories', async (request, reply) => {
+    const { page, pageSize, query, parentId } = paginationSchema.parse(request.query)
 
     const filters = {
       ...(query && { label: { contains: query } }),
-      ...(categoryId ? { parentId: categoryId }: {parentId: null})
+      ...(parentId ? { parentId: parentId }: {parentId: null})
     }
 
     const category = await prisma.category.findMany({
@@ -38,12 +38,12 @@ export async function categoryRoutes(app: FastifyInstance) {
     })
 
     return reply.status(200).send({
-      meta: { page, pageSize, totalCount },
+      meta: { page, pageSize, totalCount, parentId },
       categories: category
     })
   })
   app.post('/category', async (request, reply) => {
-    const bodySchema = z.array(CategorySchema.partial())
+    const bodySchema = z.array(CategorySchema)
     const category = bodySchema.parse(request.body)
 
     if (category.length === 0) {
