@@ -11,16 +11,36 @@ export async function categoryRoutes(app: FastifyInstance) {
   app.get('/category', async (request, reply) => {
     const { page, pageSize, query, categoryId } = paginationSchema.parse(request.query)
 
+    const filters = {
+      ...(query && { label: { contains: query } }),
+      ...(categoryId ? { parentId: categoryId }: {parentId: null})
+    }
+
     const category = await prisma.category.findMany({
-      where: {
-        ...(query && { label: { contains: query } }),
-        ...(categoryId && { parentId: categoryId })
+      where: filters,
+      select: {
+        id: true,
+        label: true,
+        icon: true,
+        subcategories: {
+          select: {
+            id: true,
+            label: true,
+            icon: true,
+          }
+        }
       },
       take: pageSize,
       skip: pageSize * page,
+    });
+    const totalCount = await prisma.category.count({
+      where: filters
     })
 
-    return reply.status(200).send(category)
+    return reply.status(200).send({
+      meta: { page, pageSize, totalCount },
+      categories: category
+    })
   })
   app.post('/category', async (request, reply) => {
     const bodySchema = z.array(CategorySchema.partial())
@@ -30,7 +50,7 @@ export async function categoryRoutes(app: FastifyInstance) {
       return reply.status(400).send({ message: 'Dados insuficientes' })
     }
     await prisma.category.createMany({
-      data: category.map(({ label, icon }) => ({ label, icon })) as any,
+      data: category.map((category) => (category)) as any,
       skipDuplicates: true,
     })
 

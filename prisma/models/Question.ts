@@ -14,6 +14,7 @@ export const QuestionSchema = z.object({
   formId: z.number().int(),
 
   questionType: QuestionTypeSchema.optional(),
+  typeId: z.number().optional(),
   options: z.array(OptionSchema.partial()).optional()
 })
 

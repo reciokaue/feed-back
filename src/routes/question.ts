@@ -66,7 +66,6 @@ export async function questionRoutes(app: FastifyInstance) {
     reply.status(201).send(newQuestion)
   })
   app.post('/questions/from/:formId/to/:toFormId', async (request: jwtRequest, reply) => {
-    try {
       const { formId, toFormId } = paramsSchema.parse(request.params)
 
       if (!formId || !toFormId)
@@ -74,7 +73,7 @@ export async function questionRoutes(app: FastifyInstance) {
 
       const questions = await prisma.question.findMany({
         where: { formId: formId },
-        include: questionSelect
+        select: questionSelect
       })
 
       await prisma.form?.update({
@@ -83,9 +82,5 @@ export async function questionRoutes(app: FastifyInstance) {
       })
 
       reply.status(200).send({ message: 'Questões copiadas com sucesso!' })
-    } catch (err) {
-      console.log(err)
-      return reply.status(400).send({ message: 'Erro inesperado', error: err })
-    }
   })
 }

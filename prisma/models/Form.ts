@@ -1,10 +1,11 @@
-import { z } from 'zod';
-import { questionCompareSelect, QuestionSchema, questionSchemaCreate, questionSelect } from './Question';
-import { CategorySchema } from './Category';
+import { z } from 'zod'
 
-/////////////////////////////////////////
+import { CategorySchema } from './Category'
+import { QuestionSchema, questionSelect } from './Question'
+
+/// //////////////////////////////////////
 // FORM SCHEMA
-/////////////////////////////////////////
+/// //////////////////////////////////////
 
 export const FormSchema = z.object({
   id: z.number().int(),
@@ -18,12 +19,17 @@ export const FormSchema = z.object({
   category: CategorySchema.optional(),
   categoryId: z.number().optional(),
   questions: z.array(QuestionSchema.partial()).optional(),
+  _count: z
+    .object({
+      questions: z.number(),
+      sessions: z.number(),
+    })
+    .optional(),
 })
 
 export type Form = z.infer<typeof FormSchema>
 
-
-export const formSelect =  {
+export const formSelect = {
   id: true,
   name: true,
   description: true,
@@ -36,7 +42,7 @@ export const formSelect =  {
       id: true,
       label: true,
       icon: true,
-    }
+    },
   },
   _count: {
     select: {
@@ -59,7 +65,7 @@ export const formDetailSelect = {
       id: true,
       label: true,
       icon: true,
-    }
+    },
   },
   questions: {
     select: questionSelect,

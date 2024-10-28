@@ -32,15 +32,15 @@ app.setErrorHandler((error, request, reply) => {
   if (error instanceof z.ZodError) {
     reply.status(400).send({
       statusCode: 400,
-      error: 'Bad Request',
-      message: 'Validation error',
+      error: 'Erro de validação',
+      message: 'Formato dos dados inválidos',
       issues: error.errors, // Array com os detalhes dos erros de validação
     })
   } else {
     reply.status(error.statusCode || 500).send({
       statusCode: error.statusCode || 500,
-      error: error.name || 'Internal Server Error',
-      message: error.message || 'An unexpected error occurred',
+      error: error.name || 'Erro interno do servidor',
+      message: error.message || 'Erro inesperado, tente novamente mais tarde',
     })
   }
 })

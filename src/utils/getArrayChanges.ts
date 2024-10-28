@@ -56,14 +56,21 @@ function formatForUpdate(array: any[]) {
 
   return {
     update: array.map((item) => {
-      if (item?.questionType) {
-        item.typeId = item.questionType.id
-        delete item.questionType
+      const itemId = item.id
+      delete item.id
+      delete item.formId
+      
+      if (item?.questionType || item?.typeId) {
+        item.questionType = {
+          connect: {id: item?.questionType?.id || item?.typeId}
+        }
+        delete item.typeId
       }
       if (item?.formId) delete item.formId
+      if(item?.options?.length === 0) delete item.options
 
       return {
-        where: { id: item.id },
+        where: { id: itemId },
         data: item,
       }
     }),
@@ -80,9 +87,11 @@ export function formatForAdding(array: any[]) {
       if(item?.options){
         item.options = formatForAdding(item.options || [])
       }
-      if (item?.questionType) {
-        item.typeId = item.questionType.id
-        delete item.questionType
+      if (item?.questionType || item?.typeId) {
+        item.questionType = {
+          connect: {id: item?.questionType?.id || item?.typeId}
+        }
+        delete item.typeId
       }
       return item
     }),
@@ -104,12 +113,12 @@ export function getArrayChanges(newArray: any[], oldArray: any[]) {
 
 
   const AlteredItems = formatForUpdate(getAlteredItems(newArray, oldArray))
-  const DeletedItems = formatForDeleting(getDeletedItems(newArray, oldArray))
-  const AddedItems = formatForAdding(getAddedItems(newArray, oldArray))
+  // const DeletedItems = formatForDeleting(getDeletedItems(newArray, oldArray))
+  // const AddedItems = formatForAdding(getAddedItems(newArray, oldArray))
 
   return {
     ...AlteredItems,
-    ...DeletedItems,
-    ...AddedItems,
+    // ...DeletedItems,
+    // ...AddedItems,
   }
 }

@@ -1,14 +1,20 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
-/////////////////////////////////////////
-// CATEGORY SCHEMA
-/////////////////////////////////////////
+/// //////////////////////////////////////
+// ORIGINAL CATEGORY SCHEMA
+/// //////////////////////////////////////
 
-export const CategorySchema = z.object({
+const baseCategorySchema = z.object({
   id: z.number().int(),
   label: z.string(),
   icon: z.string(),
   parentId: z.number().int().nullable().optional(),
 })
 
-export type Category = z.infer<typeof CategorySchema>
+export type Category = z.infer<typeof baseCategorySchema> & {
+  subcategories?: Category[]
+}
+
+export const CategorySchema: z.ZodType<Category> = baseCategorySchema.extend({
+  subcategories: z.lazy(() => CategorySchema.array()).optional(),
+})
