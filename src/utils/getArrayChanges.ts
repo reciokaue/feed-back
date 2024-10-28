@@ -39,7 +39,6 @@ function getAddedItems(newArray: any[], oldArray: any[]) {
 
     return {
       ...item,
-      options: formatForAdding(item.options),
     }
   })
 }
@@ -53,7 +52,7 @@ function getDeletedItems(newArray: any[], oldArray: any[]) {
 
 function formatForUpdate(array: any[]) {
   if (array.length === 0) return []
-
+  
   return {
     update: array.map((item) => {
       const itemId = item.id
@@ -84,9 +83,6 @@ export function formatForAdding(array: any[]) {
       delete item.id
       delete item.formId
 
-      if(item?.options){
-        item.options = formatForAdding(item.options || [])
-      }
       if (item?.questionType || item?.typeId) {
         item.questionType = {
           connect: {id: item?.questionType?.id || item?.typeId}
@@ -113,12 +109,12 @@ export function getArrayChanges(newArray: any[], oldArray: any[]) {
 
 
   const AlteredItems = formatForUpdate(getAlteredItems(newArray, oldArray))
-  // const DeletedItems = formatForDeleting(getDeletedItems(newArray, oldArray))
-  // const AddedItems = formatForAdding(getAddedItems(newArray, oldArray))
+  const DeletedItems = formatForDeleting(getDeletedItems(newArray, oldArray))
+  const AddedItems = formatForAdding(getAddedItems(newArray, oldArray))
 
   return {
     ...AlteredItems,
-    // ...DeletedItems,
-    // ...AddedItems,
+    ...DeletedItems,
+    ...AddedItems,
   }
 }

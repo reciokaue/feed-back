@@ -62,31 +62,26 @@ export async function formRoutes(app: FastifyInstance) {
     return reply.status(200).send(form)
   })
   app.post('/form', async (request: jwtRequest, reply) => {
-    try {
-      const form = FormSchema.partial().parse(request.body)
-      const { templateId } = paramsSchema.parse(request.query)
+    const form = FormSchema.partial().parse(request.body)
+    const { templateId } = paramsSchema.parse(request.query)
 
-      if(templateId){
-        const questions = await prisma.question.findMany({
-          where: { formId: templateId },
-          select: questionSelect
-        })
-
-        form.questions = formatForAdding(questions) as any
-        }
-      const newForm = await prisma.form.create({
-        data: {
-          ...form,
-          userId: request.user.sub,
-          categoryId: form?.category?.id || form.categoryId
-        } as any,
+    if(templateId){
+      const questions = await prisma.question.findMany({
+        where: { formId: templateId },
+        select: questionSelect
       })
 
-      reply.status(200).send({})
-    } catch (err) {
-      console.log(err)
-      return reply.status(400).send({ message: 'Erro inesperado', error: err })
-    }
+      form.questions = formatForAdding(questions) as any
+      }
+    const newForm = await prisma.form.create({
+      data: {
+        ...form,
+        userId: request.user.sub,
+        categoryId: form?.category?.id || form.categoryId
+      } as any,
+    })
+
+    reply.status(200).send(newForm)
   })
   app.put('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
@@ -117,6 +112,7 @@ export async function formRoutes(app: FastifyInstance) {
       category: { connect: { id: category } },
       ...({ questions: formQuestionsToUpdate })
     }
+    return reply.send(data)
 
     await prisma.form.update({
       where: { id },
