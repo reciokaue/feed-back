@@ -112,7 +112,7 @@ export async function formRoutes(app: FastifyInstance) {
       category: { connect: { id: category } },
       ...({ questions: formQuestionsToUpdate })
     }
-    return reply.send(data)
+    // return reply.send(data)
 
     await prisma.form.update({
       where: { id },

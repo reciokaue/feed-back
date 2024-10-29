@@ -16,41 +16,7 @@ function justChangeIndexes(arrayA: any[], arrayB: any[]) {
   return JSON.stringify(arrayA) === JSON.stringify(arrayB)
 }
 
-function getAlteredItems(newArray: any[], oldArray: any[]) {
-  if (oldArray.length === 0) return []
-
-  return newArray.filter((item) => {
-    const oldItem = oldArray.find((oldItem) => oldItem.id === item.id)
-    if (!oldItem) return false
-
-    if (item?.options)
-      item.options = getArrayChanges(item.options, oldItem.options)
-
-    return item
-  })
-}
-function getAddedItems(newArray: any[], oldArray: any[]) {
-  if (oldArray.length === 0) return newArray
-  const addedItems = newArray.filter(
-    (newItem) => !oldArray.find((oldItem) => oldItem.id === newItem.id),
-  )
-  return addedItems.map((item) => {
-    if (!item.options) return item
-
-    return {
-      ...item,
-    }
-  })
-}
-function getDeletedItems(newArray: any[], oldArray: any[]) {
-  if (newArray.length === 0 || oldArray.length === 0) return []
-
-  return oldArray.filter(
-    (oldOpt) => !newArray.find((newOpt) => newOpt.id === oldOpt.id),
-  )
-}
-
-function formatForUpdate(array: any[]) {
+function formatForUpdate(array: any[] = []) {
   if (array.length === 0) return []
   
   return {
@@ -75,7 +41,7 @@ function formatForUpdate(array: any[]) {
     }),
   }
 }
-export function formatForAdding(array: any[]) {
+export function formatForAdding(array: any[] = []) {
   if (array.length === 0) return {create: []}
 
   return {
@@ -93,7 +59,7 @@ export function formatForAdding(array: any[]) {
     }),
   }
 }
-function formatForDeleting(array: any[]) {
+function formatForDeleting(array: any[] = []) {
   if (array.length === 0) return []
 
   return {
@@ -101,20 +67,49 @@ function formatForDeleting(array: any[]) {
   }
 }
 
-export function getArrayChanges(newArray: any[], oldArray: any[]) {
-  if (JSON.stringify(newArray) === JSON.stringify(oldArray)) return []
+export function getArrayChanges(array1: any[], array2: any[]) {
+  let newArray = array1;
+  let oldArray = array2;
 
-  const ItJustChangedIndexes = justChangeIndexes(newArray, oldArray)
-  if (ItJustChangedIndexes) return formatForUpdate(newArray)
+  let addedItems: any[] = [];
+  let deletedItems: any[] = [];
+  let alteredItems: any[] = [];
 
+  if (JSON.stringify(newArray) === JSON.stringify(oldArray)) {
+    return {
+      create: []
+    };
+  }
 
-  const AlteredItems = formatForUpdate(getAlteredItems(newArray, oldArray))
-  const DeletedItems = formatForDeleting(getDeletedItems(newArray, oldArray))
-  const AddedItems = formatForAdding(getAddedItems(newArray, oldArray))
+  const ItJustChangedIndexes = justChangeIndexes(newArray, oldArray);
+  if (ItJustChangedIndexes) {
+    return formatForUpdate(newArray);
+  }
+  if (oldArray.length === 0) {
+    addedItems = newArray
+    deletedItems = []
+    alteredItems = []
+  } else {
+    addedItems = newArray.filter((item) => item.id < 0);
+
+    deletedItems = oldArray.filter(
+      (oldItem) => !newArray.some((newItem) => newItem.id === oldItem.id)
+    );
+
+    alteredItems = newArray.filter((item) => {
+      const oldItem = oldArray.find((oldItem) => oldItem.id === item.id)
+      if (!oldItem) return false
+  
+      if (item?.options)
+        item.options = getArrayChanges(item.options, oldItem.options)
+  
+      return item
+    })
+  }
 
   return {
-    ...AlteredItems,
-    ...DeletedItems,
-    ...AddedItems,
-  }
+    ...formatForUpdate(alteredItems),
+    ...formatForDeleting(deletedItems),
+    ...formatForAdding(addedItems)
+  };
 }
