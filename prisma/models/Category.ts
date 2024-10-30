@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import { z } from 'zod'
 
 /// //////////////////////////////////////
@@ -5,7 +6,7 @@ import { z } from 'zod'
 /// //////////////////////////////////////
 
 const baseCategorySchema = z.object({
-  id: z.number().int().optional(),
+  id: z.number().int(),
   label: z.string(),
   icon: z.string(),
   parentId: z.number().int().nullable().optional(),
@@ -13,8 +14,10 @@ const baseCategorySchema = z.object({
 
 export type Category = z.infer<typeof baseCategorySchema> & {
   subcategories?: Category[]
+  parent?: Category
 }
 
 export const CategorySchema: z.ZodType<Category> = baseCategorySchema.extend({
   subcategories: z.lazy(() => CategorySchema.array()).optional(),
+  parent: z.lazy(() => baseCategorySchema),
 })

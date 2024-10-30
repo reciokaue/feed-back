@@ -1,8 +1,8 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
-/////////////////////////////////////////
+/// //////////////////////////////////////
 // QUESTION TYPE SCHEMA
-/////////////////////////////////////////
+/// //////////////////////////////////////
 
 export const QuestionTypeSchema = z.object({
   id: z.number().int(),
@@ -12,4 +12,3 @@ export const QuestionTypeSchema = z.object({
 })
 
 export type QuestionType = z.infer<typeof QuestionTypeSchema>
-

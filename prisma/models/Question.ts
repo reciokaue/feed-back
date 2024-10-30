@@ -1,10 +1,11 @@
-import { z } from 'zod';
-import { QuestionTypeSchema } from './QuestionType';
-import { OptionSchema } from './Option';
+import { z } from 'zod'
 
-/////////////////////////////////////////
+import { OptionSchema } from './Option'
+import { QuestionTypeSchema } from './QuestionType'
+
+/// //////////////////////////////////////
 // QUESTION SCHEMA
-/////////////////////////////////////////
+/// //////////////////////////////////////
 
 export const QuestionSchema = z.object({
   id: z.number().int(),
@@ -15,7 +16,7 @@ export const QuestionSchema = z.object({
 
   questionType: QuestionTypeSchema.optional(),
   typeId: z.number().optional(),
-  options: z.array(OptionSchema.partial()).optional()
+  options: z.array(OptionSchema.partial()).optional(),
 })
 
 export type Question = z.infer<typeof QuestionSchema>
@@ -73,13 +74,13 @@ export const questionResponsesSelect = {
   },
   _count: {
     select: {
-      responses: true
-    }
+      responses: true,
+    },
   },
   responses: {
     select: {
       id: true,
       value: true,
-    }
-  }
+    },
+  },
 }
