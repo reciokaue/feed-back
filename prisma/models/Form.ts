@@ -42,6 +42,7 @@ export const formSelect = {
       id: true,
       label: true,
       icon: true,
+      parent: true
     },
   },
   _count: {

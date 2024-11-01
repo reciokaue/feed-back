@@ -14,10 +14,13 @@ const baseCategorySchema = z.object({
 
 export type Category = z.infer<typeof baseCategorySchema> & {
   subcategories?: Category[]
-  parent?: Category
+  parent?: Category | null
 }
 
 export const CategorySchema: z.ZodType<Category> = baseCategorySchema.extend({
   subcategories: z.lazy(() => CategorySchema.array()).optional(),
-  parent: z.lazy(() => baseCategorySchema),
+  parent: z
+    .lazy(() => baseCategorySchema)
+    .optional()
+    .nullable(),
 })
