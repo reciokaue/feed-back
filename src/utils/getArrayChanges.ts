@@ -55,6 +55,9 @@ export function formatForAdding(array: any[] = []) {
         }
         delete item.typeId
       }
+      if(item?.options){
+        item.options = formatForAdding(item.options)
+      }
       return item
     }),
   }
