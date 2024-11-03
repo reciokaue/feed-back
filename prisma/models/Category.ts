@@ -6,8 +6,9 @@ import { z } from 'zod'
 /// //////////////////////////////////////
 
 const baseCategorySchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().optional(),
   label: z.string(),
+  name: z.string(),
   icon: z.string(),
   parentId: z.number().int().nullable().optional(),
 })
@@ -24,3 +25,18 @@ export const CategorySchema: z.ZodType<Category> = baseCategorySchema.extend({
     .optional()
     .nullable(),
 })
+
+export const CategorySelect = {
+  id: true,
+  label: true,
+  name: true,
+  icon: true,
+  subcategories: {
+    select: {
+      id: true,
+      label: true,
+      icon: true,
+      name: true
+    }
+  }
+}

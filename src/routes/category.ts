@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { verifyJwt } from '../middlewares/JWTAuth'
 import { paginationSchema } from '../utils/paginationSchema'
-import { CategorySchema } from '../../prisma/models/Category'
+import { CategorySchema, CategorySelect } from '../../prisma/models/Category'
 
 export async function categoryRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
@@ -18,18 +18,7 @@ export async function categoryRoutes(app: FastifyInstance) {
 
     const category = await prisma.category.findMany({
       where: filters,
-      select: {
-        id: true,
-        label: true,
-        icon: true,
-        subcategories: {
-          select: {
-            id: true,
-            label: true,
-            icon: true,
-          }
-        }
-      },
+      select: CategorySelect,
       take: pageSize,
       skip: pageSize * page,
     });
@@ -42,6 +31,17 @@ export async function categoryRoutes(app: FastifyInstance) {
       categories: category
     })
   })
+  app.get('/category/:categoryName', async (request, reply) => {
+    const { categoryName } = paginationSchema.parse(request.params)
+    
+    const category = await prisma.category.findFirst({
+      where: { name: categoryName},
+      select: CategorySelect,
+    });
+
+    return reply.status(200).send(category)
+  })
+
   app.post('/category', async (request, reply) => {
     const bodySchema = z.array(CategorySchema)
     const category = bodySchema.parse(request.body)
@@ -56,7 +56,6 @@ export async function categoryRoutes(app: FastifyInstance) {
 
     reply.status(201)
   })
-
   app.delete('/category', async (request, reply) => {
     const bodySchema = z.array(z.number())
     const category = bodySchema.parse(request.body)
