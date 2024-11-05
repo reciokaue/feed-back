@@ -2,14 +2,14 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { verifyJwt } from '../middlewares/JWTAuth'
-import { paginationSchema } from '../utils/paginationSchema'
+import { querySchema } from '../utils/querySchema'
 import { CategorySchema, CategorySelect } from '../../prisma/models/Category'
 
 export async function categoryRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
   app.get('/categories', async (request, reply) => {
-    const { page, pageSize, query, parentId } = paginationSchema.parse(request.query)
+    const { page, pageSize, query, parentId } = querySchema.parse(request.query)
 
     const filters = {
       ...(query && { label: { contains: query } }),
@@ -32,7 +32,7 @@ export async function categoryRoutes(app: FastifyInstance) {
     })
   })
   app.get('/category/:categoryName', async (request, reply) => {
-    const { categoryName } = paginationSchema.parse(request.params)
+    const { categoryName } = querySchema.parse(request.params)
     
     const category = await prisma.category.findFirst({
       where: { name: categoryName},

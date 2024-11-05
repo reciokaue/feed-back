@@ -5,7 +5,7 @@ import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 
 import { formatForAdding } from '../utils/getArrayChanges'
 import { questionResponsesSelect, questionSelect } from '../../prisma/models/Question'
-import { paginationSchema } from '../utils/paginationSchema'
+import { querySchema } from '../utils/querySchema'
 
 const paramsSchema = z.object({
   questionId: z.coerce.number().int().positive().optional(),
@@ -28,7 +28,7 @@ export async function questionRoutes(app: FastifyInstance) {
     return question
   })
   app.get('/questions', async (request, reply) => {
-    const { query, page, pageSize, categoryId } = paginationSchema.parse(request.query)
+    const { query, page, pageSize, categoryId } = querySchema.parse(request.query)
 
     const questions = await prisma.question.findMany({
       where: {

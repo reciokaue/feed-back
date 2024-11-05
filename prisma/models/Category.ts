@@ -6,7 +6,7 @@ import { z } from 'zod'
 /// //////////////////////////////////////
 
 const baseCategorySchema = z.object({
-  id: z.number().int().optional(),
+  id: z.number().int(),
   label: z.string(),
   name: z.string(),
   icon: z.string(),
@@ -36,14 +36,7 @@ export const CategorySelect = {
       id: true,
       label: true,
       icon: true,
-      name: true
-    }
-  }
-}
-export const FormCategorySelect = {
-  id: true,
-  label: true,
-  name: true,
-  icon: true,
-  parent: true
+      name: true,
+    },
+  },
 }

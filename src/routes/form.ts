@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
-import { paginationSchema } from '../utils/paginationSchema'
+import { querySchema } from '../utils/querySchema'
 import {
   formDetailSelect,
   FormSchema,
@@ -20,7 +20,7 @@ export async function formRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
   app.get('/forms', async (request: jwtRequest) => {
-    const { page, pageSize, query, isPublic, categoryId } = paginationSchema.parse(
+    const { page, pageSize, query, isPublic, categoryId } = querySchema.parse(
       request.query,
     )
 
