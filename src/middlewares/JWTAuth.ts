@@ -38,9 +38,9 @@ export async function verifyJwt(
   reply: FastifyReply,
 ) {
   try {
-    if (isPublicPath(request.url)) {
-      return;
-    }
+    // if (isPublicPath(request.url)) {
+    //   return;
+    // }
 
     const bearerHeader = request.headers.authorization;
     const token =
