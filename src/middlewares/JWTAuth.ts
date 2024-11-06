@@ -17,7 +17,7 @@ export interface jwtRequest extends FastifyRequest {
 }
 
 const publicPaths = [
-  '/questions/form/:formId',
+  '/forms', '/responses/form/:formId', '/form/:id'
 ];
 
 function isPublicPath(url: string): boolean {
