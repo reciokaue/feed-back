@@ -95,8 +95,9 @@ model Session {
 }
 
 model Response {
-  id    Int    @id @default(autoincrement())
-  value String
+  id    Int     @id @default(autoincrement())
+  value Int?
+  text  String?
 
   sessionId Int
   session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
