@@ -7,5 +7,7 @@ export const querySchema = z.object({
   query: z.string().default(''),
   categoryId: z.coerce.number().optional(),
   categoryName: z.string().optional(),
-  parentId: z.coerce.number().optional()
+  parentId: z.coerce.number().optional(),
+  formId: z.coerce.number().optional(),
+  id: z.coerce.number().optional(),
 })

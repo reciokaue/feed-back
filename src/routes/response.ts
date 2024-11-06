@@ -1,8 +1,9 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
-import { paginationSchema } from '../utils/paginationSchema'
-import { ResponseSchema } from '../../prisma/models/Response'
+import { querySchema } from '../utils/querySchema'
+import { MultipleResponsesSchema, ResponseSchema } from '../../prisma/models/Response'
+import { formatForAdding } from '../utils/getArrayChanges'
 
 const paramsSchema = z.object({
   questionId: z.coerce.number().int().positive().optional(),
@@ -12,8 +13,8 @@ const paramsSchema = z.object({
 })
 
 export async function responseRoutes(app: FastifyInstance) {
-  app.get('/responses/:questionId', async (request) => {
-    const { page, pageSize, query } = paginationSchema.parse(request.query)
+  app.get('/responses/question/:questionId', async (request) => {
+    const { page, pageSize, query } = querySchema.parse(request.query)
     const { questionId } = paramsSchema.parse(request.params)
 
     const responses = await prisma.response.findMany({
@@ -28,7 +29,7 @@ export async function responseRoutes(app: FastifyInstance) {
     return responses
   })
   app.get('/responses/session/:sessionId', async (request) => {
-    const { page, pageSize, query } = paginationSchema.parse(request.query)
+    const { page, pageSize, query } = querySchema.parse(request.query)
     const { sessionId } = paramsSchema.parse(request.params)
 
     const responses = await prisma.response.findMany({
@@ -42,30 +43,25 @@ export async function responseRoutes(app: FastifyInstance) {
 
     return responses
   })
-  app.post('/response', async (request, reply) => {
-    const response = ResponseSchema.parse(request.body)
+  app.post('/responses/form/:formId', async (request, reply) => {
+    const responses = MultipleResponsesSchema.parse(request.body)
+    const { formId } = querySchema.parse(request.params)
 
-    const question = await prisma.question.findUnique({
-      where: { id: response.questionId },
+    console.log({
+      formId: formId,
+      responses: JSON.stringify(formatForAdding(responses))
     })
-    if (!question)
-      return reply.status(404).send({ message: 'Question does not exist' })
+    if(!formId)
+      return reply.status(404).send({message: 'ID do formulário não informado'})
 
-    if (!response.sessionId) {
-      const session = await prisma.session.create({
-        data: {
-          formId: question.formId,
-          responses: {
-            create: response,
-          },
-        },
-      })
-      return reply.status(201).send(session.id)
-    }
-
-    await prisma.response.create({
-      data: response,
+    await prisma.session.create({
+      data: {
+        formId: formId,
+        responses: formatForAdding(responses)
+      }
     })
+
+    return reply.send()
   })
   app.delete('/response/:responseId', async (request) => {
     const { responseId } = paramsSchema.parse(request.params)
@@ -83,7 +79,7 @@ export async function responseRoutes(app: FastifyInstance) {
   })
 
   app.get('/sessions/:formId', async (request) => {
-    const { page, pageSize, query } = paginationSchema.parse(request.query)
+    const { page, pageSize, query } = querySchema.parse(request.query)
     const { formId } = paramsSchema.parse(request.params)
 
     const sessions = await prisma.session.findMany({

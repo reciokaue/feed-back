@@ -83,4 +83,19 @@ export async function questionRoutes(app: FastifyInstance) {
 
       reply.status(200).send({ message: 'Questões copiadas com sucesso!' })
   })
+  app.delete('/question/:questionId', async (request: jwtRequest, reply) => {
+    const { questionId } = paramsSchema.parse(request.params)
+
+    const questionExists = await prisma.question.findUnique({
+      where: { id: questionId },
+    })
+    if(!questionExists)
+      return reply.status(404).send({message: 'Questão não encontrada'})
+
+    await prisma.question.delete({
+      where: { id: questionId },
+    })
+
+    reply.status(200).send({ message: 'Questão deletada com sucesso!' })
+})
 }

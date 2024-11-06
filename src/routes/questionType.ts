@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { verifyJwt } from '../middlewares/JWTAuth'
 import { QuestionTypeSchema } from '../../prisma/models/QuestionType'
+import { querySchema } from '../utils/querySchema'
 
 export async function questionTypeRoutes(app: FastifyInstance) {
   // app.addHook('onRequest', verifyJwt)
@@ -34,7 +35,7 @@ export async function questionTypeRoutes(app: FastifyInstance) {
   })
 
   app.delete('/question-types/:id', async (request, reply) => {
-    const { id } = QuestionTypeSchema.parse(request.params)
+    const { id } = querySchema.parse(request.params)
 
     await prisma.questionType.delete({
       where: { id },

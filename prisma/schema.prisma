@@ -101,8 +101,8 @@ model Response {
   sessionId Int
   session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
-  optionId Int
-  option   Option @relation(fields: [optionId], references: [id], onDelete: NoAction)
+  optionId Int?
+  option   Option? @relation(fields: [optionId], references: [id], onDelete: NoAction)
 
   questionId Int
   question   Question @relation(fields: [questionId], references: [id], onDelete: NoAction)
