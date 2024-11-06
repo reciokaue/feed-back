@@ -46,14 +46,14 @@ export async function verifyJwt(
     const token =
       typeof bearerHeader !== 'undefined' && bearerHeader.split(' ')[1];
 
-    if (!token) return reply.status(404).send({ message: 'Missing token' });
+    // if (!token) return reply.status(404).send({ message: 'Missing token' });
 
     jwt.verify(token, secret, (err, decoded) => {
-      if (err) {
-        return reply
-          .status(403)
-          .send({ message: 'Failed to authenticate', error: err });
-      }
+      // if (err) {
+      //   return reply
+      //     .status(403)
+      //     .send({ message: 'Failed to authenticate', error: err });
+      // }
 
       request.user = decoded as jwtUser;
     });
