@@ -112,6 +112,7 @@ export async function formRoutes(app: FastifyInstance) {
       category: { connect: { id: category } },
       ...({ questions: formQuestionsToUpdate })
     }
+    delete data.categoryId
     // return reply.send(data)
 
     await prisma.form.update({
