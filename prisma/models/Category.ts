@@ -6,7 +6,7 @@ import { z } from 'zod'
 /// //////////////////////////////////////
 
 const baseCategorySchema = z.object({
-  id: z.number().int(),
+  id: z.number().int().optional(),
   label: z.string(),
   name: z.string(),
   icon: z.string(),

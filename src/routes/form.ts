@@ -137,4 +137,27 @@ export async function formRoutes(app: FastifyInstance) {
 
     return form
   })
+
+  app.post('/form/many', async (request: jwtRequest, reply) => {
+    const forms = z.array(FormSchema.partial()).parse(request.body);
+    const newForms = await Promise.all(
+      forms.map(async (form) => {
+        const category = form?.category?.id || form.categoryId;
+        const formQuestionsToUpdate = getArrayChanges(form?.questions || [], []);
+        const data = {
+          ...form,
+          category: { connect: { id: category } },
+          ...({ questions: formQuestionsToUpdate }),
+        };
+        return data
+        // delete data.categoryId;
+
+        // return await prisma.form.create({
+        //     data: data as any,
+        // });
+      })
+    );
+
+    reply.status(201).send(newForms);
+  })
 }

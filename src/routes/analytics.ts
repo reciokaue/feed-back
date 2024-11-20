@@ -42,11 +42,6 @@ export async function analyticsRoutes(app: FastifyInstance) {
             index: 'asc'
           }
         },
-        responses: {
-          include: {
-            option: true
-          }
-        }
       },
       orderBy: {
         index: 'asc'
@@ -55,9 +50,8 @@ export async function analyticsRoutes(app: FastifyInstance) {
 
     const questionsResults = await Promise.all(
       questions.map(async (question) => {
-        // Se a questão tem opções (múltipla escolha)
-        if (question.options.length > 0) {
-          // Agrupa respostas por opção
+        // Se a questão tem opções
+        if (["list", "options",].includes(question?.questionType?.name || '')) {
           const optionCounts = await prisma.response.groupBy({
             by: ['optionId'],
             where: {
@@ -94,51 +88,60 @@ export async function analyticsRoutes(app: FastifyInstance) {
         }
         
         // Para questões de texto ou outros tipos sem opções
-        const uniqueResponses = await prisma.response.groupBy({
-          by: ['text'],
-          where: {
-            questionId: question.id,
-            text: {
-              not: null
-            }
-          },
-          _count: true
-        })
-
-        // Se tiver value, tenta converter para número e criar dados do gráfico
-        const hasNumericValues = question.responses.every(
-          response => response.value !== null && !isNaN(Number(response.value))
-        )
-
-        if (hasNumericValues) {
-          const numericResponses = question.responses
-            .map(r => r.value)
-            .filter((value): value is number => value !== null)
-
-          const average = numericResponses.reduce((a, b) => a + b, 0) / numericResponses.length
-          const min = Math.min(...numericResponses)
-          const max = Math.max(...numericResponses)
-
-          // Agrupa valores em intervalos para o gráfico
-          const intervals = 10
-          const range = max - min
-          const intervalSize = range / intervals
-
-          const distribution: Record<string, number> = {}
-          numericResponses.forEach(value => {
-            const intervalIndex = Math.floor((value - min) / intervalSize)
-            const intervalStart = min + (intervalIndex * intervalSize)
-            const intervalEnd = intervalStart + intervalSize
-            const label = `${intervalStart.toFixed(1)} - ${intervalEnd.toFixed(1)}`
-            distribution[label] = (distribution[label] || 0) + 1
+        if(["text", "phone", "email", "time", "date", "longText"].includes(question?.questionType?.name || '')) {
+          const uniqueResponses = await prisma.response.groupBy({
+            by: ['text'],
+            where: {
+              questionId: question.id,
+              text: {
+                not: null
+              }
+            },
+            _count: true
           })
+          return {
+            id: question.id,
+            text: question.text,
+            type: question.questionType?.name,
+            index: question.index,
+            required: question.required,
+            isMultipleChoice: false,
+            hasNumericValues: false,
+            totalResponses: uniqueResponses.length,
+            responses: uniqueResponses.map(response => ({
+              text: response.text,
+              count: response._count
+            }))
+          }
+        }
 
-          const chartData = Object.entries(distribution).map(([label, count]) => ({
-            label,
-            value: count,
-            percentage: (count / numericResponses.length) * 100
-          }))
-
+        // Para questões que retornam um value
+        if(["starRating", "slider",].includes(question?.questionType?.name || '')){
+          const responses = await prisma.response.findMany({
+            where: {
+              session:{ formId },
+              value: {not: null}
+            }
+          })
+          const numericResponses = responses.map(r => r.value)
+            .filter((value): value is number => value !== null);
+        
+          const average = numericResponses.reduce((a, b) => a + b, 0) / numericResponses.length;
+          const min = Math.min(...numericResponses);
+          const max = Math.max(...numericResponses);
+        
+          // Agrupa valores por frequência
+          const frequencyMap: Record<number, number> = {};
+          numericResponses.forEach(value => {
+            frequencyMap[value] = (frequencyMap[value] || 0) + 1;
+          });
+        
+          // Transforma os dados de frequência em um formato para gráfico
+          const chartData = Object.entries(frequencyMap).map(([value, count]) => ({
+            label: value,
+            value: count 
+          }));
+        
           return {
             id: question.id,
             text: question.text,
@@ -154,24 +157,8 @@ export async function analyticsRoutes(app: FastifyInstance) {
               max,
               median: numericResponses.sort()[Math.floor(numericResponses.length / 2)]
             },
-            chartData
-          }
-        }
-
-        // Para respostas textuais
-        return {
-          id: question.id,
-          text: question.text,
-          type: question.questionType?.name,
-          index: question.index,
-          required: question.required,
-          isMultipleChoice: false,
-          hasNumericValues: false,
-          totalResponses: uniqueResponses.length,
-          responses: uniqueResponses.map(response => ({
-            text: response.text,
-            count: response._count
-          }))
+            chartData,
+          };
         }
       })
     )
