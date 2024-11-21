@@ -34,7 +34,10 @@ export async function authRoutes(app: FastifyInstance) {
       expiresIn: expires,
     })
 
-    return token
+    return {
+      user,
+      token
+    }
   })
   app.post('/register', async (request, reply) => {
     const bodySchema = z.object({
@@ -64,7 +67,10 @@ export async function authRoutes(app: FastifyInstance) {
       expiresIn: expires,
     })
 
-    return token
+    return {
+      user,
+      token
+    }
   })
   app.post('/refresh', async (request, reply) => {
     const bodySchema = z.object({

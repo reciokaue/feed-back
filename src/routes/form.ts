@@ -19,19 +19,21 @@ const paramsSchema = z.object({
 export async function formRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
-  app.get('/forms', async (request: jwtRequest) => {
+  app.get('/forms', async (request: jwtRequest, reply) => {
     const { page, pageSize, query, isPublic, categoryId } = querySchema.parse(
       request.query,
     )
 
+    if(!isPublic && !request?.user?.sub)
+      return reply.status(401).send({message: 'Você não esta autenticado'})
+
     const filters: any = {
       ...(query && {
-        OR: [
-          { name: { contains: query } },
-          { about: { contains: query } }
-        ],
+        OR: [{ name: { contains: query } }, { about: { contains: query } }],
       }),
-      ...(isPublic ? { isPublic: true } : { userId: request.user?.sub }),
+      ...(isPublic
+        ? { isPublic: true, active: true }
+        : { userId: request.user?.sub }),
       ...(categoryId && { category: { id: categoryId } }),
     }
 
@@ -46,7 +48,7 @@ export async function formRoutes(app: FastifyInstance) {
       select: formSelect,
     })
 
-    return { meta: { page, pageSize, totalCount }, forms }
+    reply.send({ meta: { page, pageSize, totalCount }, forms })
   })
   app.get('/form/:id', async (request, reply) => {
     const { id } = paramsSchema.parse(request.params)
@@ -65,19 +67,19 @@ export async function formRoutes(app: FastifyInstance) {
     const form = FormSchema.partial().parse(request.body)
     const { templateId } = paramsSchema.parse(request.query)
 
-    if(templateId){
+    if (templateId) {
       const questions = await prisma.question.findMany({
         where: { formId: templateId },
-        select: questionSelect
+        select: questionSelect,
       })
 
       form.questions = formatForAdding(questions) as any
-      }
+    }
     const newForm = await prisma.form.create({
       data: {
         ...form,
         userId: request.user.sub,
-        categoryId: form?.category?.id || form.categoryId
+        categoryId: form?.category?.id || form.categoryId,
       } as any,
     })
 
@@ -94,23 +96,24 @@ export async function formRoutes(app: FastifyInstance) {
     delete form._count
     delete form.logoUrl
 
-    const formExists = (await prisma.form.findUnique({
+    const formExists = await prisma.form.findUnique({
       where: { id },
       select: formDetailSelect,
-    }))
+    })
 
     if (!formExists)
       return reply.status(404).send({ message: 'Formulário não encontrado' })
     if (formExists?.userId !== request?.user?.sub)
       return reply.status(400).send({ message: 'Este não é o seu formulário' })
 
-    const formQuestionsToUpdate = (form.questions !== null || form.questions !== undefined) &&
+    const formQuestionsToUpdate =
+      (form.questions !== null || form.questions !== undefined) &&
       getArrayChanges(form?.questions || [], formExists.questions || [])
 
     const data = {
       ...form,
       category: { connect: { id: category } },
-      ...({ questions: formQuestionsToUpdate })
+      ...{ questions: formQuestionsToUpdate },
     }
     delete data.categoryId
     // return reply.send(data)
@@ -139,25 +142,25 @@ export async function formRoutes(app: FastifyInstance) {
   })
 
   app.post('/form/many', async (request: jwtRequest, reply) => {
-    const forms = z.array(FormSchema.partial()).parse(request.body);
+    const forms = z.array(FormSchema.partial()).parse(request.body)
     const newForms = await Promise.all(
       forms.map(async (form) => {
-        const category = form?.category?.id || form.categoryId;
-        const formQuestionsToUpdate = getArrayChanges(form?.questions || [], []);
+        const category = form?.category?.id || form.categoryId
+        const formQuestionsToUpdate = getArrayChanges(form?.questions || [], [])
         const data = {
           ...form,
           category: { connect: { id: category } },
-          ...({ questions: formQuestionsToUpdate }),
-        };
+          ...{ questions: formQuestionsToUpdate },
+        }
         return data
         // delete data.categoryId;
 
         // return await prisma.form.create({
         //     data: data as any,
         // });
-      })
-    );
+      }),
+    )
 
-    reply.status(201).send(newForms);
+    reply.status(201).send(newForms)
   })
 }

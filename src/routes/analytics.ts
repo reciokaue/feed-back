@@ -23,9 +23,9 @@ export async function analyticsRoutes(app: FastifyInstance) {
       totalResponses,
       totalQuestions: questions,
       averageResponsesPerSession,
-      completionRate: questions > 0 
+      completionRate: (questions > 0 
         ? (averageResponsesPerSession / questions) * 100 
-        : 0
+        : 0) + '%'
     }
   })
   app.get('/analytics/forms/:formId/questions-results', async (request) => {
