@@ -1,6 +1,5 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
-import { z } from 'zod'
 import { querySchema } from '../utils/querySchema'
 
 export async function analyticsRoutes(app: FastifyInstance) {
@@ -120,6 +119,7 @@ export async function analyticsRoutes(app: FastifyInstance) {
           const responses = await prisma.response.findMany({
             where: {
               session:{ formId },
+              questionId: question.id,
               value: {not: null}
             }
           })
