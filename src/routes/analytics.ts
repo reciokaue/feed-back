@@ -17,18 +17,19 @@ export async function analyticsRoutes(app: FastifyInstance) {
     const averageResponsesPerSession = totalSessions > 0 
       ? totalResponses / totalSessions 
       : 0
+    const completionRate = (questions > 0 
+      ? (averageResponsesPerSession / questions) * 100 
+      : 0)
 
     return {
       totalSessions,
       totalResponses,
       totalQuestions: questions,
       averageResponsesPerSession,
-      completionRate: (questions > 0 
-        ? (averageResponsesPerSession / questions) * 100 
-        : 0) + '%'
+      completionRate: (completionRate > 100? 100: completionRate) + '%'
     }
   })
-  app.get('/analytics/forms/:formId/questions-results', async (request) => {
+  app.get('/analytics/forms/:formId/questions-results', async (request, reply) => {
     const { formId } = querySchema.parse(request.params)
     
     // Busca todas as questões do formulário com seus tipos e opções
@@ -49,8 +50,10 @@ export async function analyticsRoutes(app: FastifyInstance) {
 
     const questionsResults = await Promise.all(
       questions.map(async (question) => {
+        const questionType = question?.questionType?.name || ''
+
         // Se a questão tem opções
-        if (["list", "options",].includes(question?.questionType?.name || '')) {
+        if (["list", "options",].includes(questionType)) {
           const optionCounts = await prisma.response.groupBy({
             by: ['optionId'],
             where: {
@@ -87,7 +90,7 @@ export async function analyticsRoutes(app: FastifyInstance) {
         }
         
         // Para questões de texto ou outros tipos sem opções
-        if(["text", "phone", "email", "time", "date", "longText"].includes(question?.questionType?.name || '')) {
+        if(["text", "phone", "email", "time", "date", "longText"].includes(questionType)) {
           const uniqueResponses = await prisma.response.groupBy({
             by: ['text'],
             where: {
@@ -115,31 +118,35 @@ export async function analyticsRoutes(app: FastifyInstance) {
         }
 
         // Para questões que retornam um value
-        if(["starRating", "slider",].includes(question?.questionType?.name || '')){
+        if(["starRating", "slider",].includes(questionType)){
           const responses = await prisma.response.findMany({
             where: {
               session:{ formId },
               questionId: question.id,
               value: {not: null}
+            },
+            select: {
+              value: true
             }
-          })
+          }) as {value: number}[]
+
+          const map: Record<number, number> = {};
           const numericResponses = responses.map(r => r.value)
-            .filter((value): value is number => value !== null);
-        
-          const average = numericResponses.reduce((a, b) => a + b, 0) / numericResponses.length;
-          const min = Math.min(...numericResponses);
-          const max = Math.max(...numericResponses);
-        
-          // Agrupa valores por frequência
-          const frequencyMap: Record<number, number> = {};
-          numericResponses.forEach(value => {
-            frequencyMap[value] = (frequencyMap[value] || 0) + 1;
+
+          numericResponses.concat(
+            (questionType === 'slider'? [0,1,2,3,4,5,6,7,8,9,10]: [1,2,3,4,5])
+          ).forEach(value => {
+            map[value] = (map[value] + 1) || 0;
           });
-        
-          // Transforma os dados de frequência em um formato para gráfico
-          const chartData = Object.entries(frequencyMap).map(([value, count]) => ({
+          
+          const values = Object.values(map)
+          const min = Math.min(...values);
+          const max = Math.max(...values);
+          const average = numericResponses.reduce((acc, val) => acc + val, 0) / numericResponses.length;
+
+          const chartData = Object.entries(map).map(([value, count]) => ({
             label: value,
-            value: count 
+            value: count
           }));
         
           return {
@@ -163,11 +170,11 @@ export async function analyticsRoutes(app: FastifyInstance) {
       })
     )
 
-    return {
-      formId,
-      totalQuestions: questions.length,
-      questions: questionsResults
-    }
+    return reply.send({
+        formId,
+        totalQuestions: questions.length,
+        questions: questionsResults
+    }) 
   })
   app.get('/analytics/forms/:formId/total-sessions', async (request) => {
     const { formId } = querySchema.parse(request.params);

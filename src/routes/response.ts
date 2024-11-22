@@ -38,18 +38,49 @@ export async function responseRoutes(app: FastifyInstance) {
   app.get('/responses/form/:formId', async (request) => {
     const { page, pageSize, query } = querySchema.parse(request.query)
     const { formId } = querySchema.parse(request.params);
-  
+    
+    const questions = await prisma.question.findMany({
+      where: { formId },
+      select: { id: true, index: true},
+      orderBy: { index: 'asc' }
+    })
+    const order = new Map();
+    questions.forEach((question) => {
+      order.set(question.id, null);
+    });
+
     const sessions = await prisma.session.findMany({
-      where: { formId, ...(query && { text: { contains: query } }),},
-      include: {
+      where: { formId },
+      select: {
+        id: true,
+        createdAt: true,
         responses: true,
       },
       take: pageSize,
       skip: pageSize * page,
     });
+
+    const formatedSessions = sessions.map(session => {
+      const groupedResponses = new Map(order)
+
+      session.responses.forEach((response) => {
+        const text = groupedResponses.get(response.questionId )?.text || ''
+        if(response?.value)
+          return groupedResponses.set(response.questionId, response)
+
+        groupedResponses.set(response.questionId, {
+          ...response,
+          text: text? text + ', ' + response.text: response?.text
+        })
+      })
+      return {
+        ...session,
+        responses: Array.from(groupedResponses.values())
+      }
+    })
   
     return {
-      sessions,
+      sessions: formatedSessions,
     };
   });
   app.post('/responses/form/:formId', async (request, reply) => {
