@@ -59,23 +59,23 @@ export async function analyticsRoutes(app: FastifyInstance) {
             where: {
               questionId: question.id,
               optionId: {
-                not: null
-              }
+                not: null,
+              },
             },
-            _count: true
-          })
-
-          const totalResponses = optionCounts.reduce((sum, count) => sum + count._count, 0)
-
-          // Formata dados para gráfico
-          const chartData = question.options.map(option => {
-            const count = optionCounts.find(c => c.optionId === option.id)?._count ?? 0
+            _count: true,
+          });
+          
+          const totalResponses = optionCounts.reduce((sum, item) => sum + item._count, 0);
+          
+          const chartData = question.options.map((option) => {
+            const count = optionCounts.find((c) => c.optionId === option.id)?._count ?? 0;
+            const percentage = totalResponses > 0 ? (count / totalResponses) * 100 : 0;
             return {
               label: option.text,
               value: count,
-              percentage: totalResponses > 0 ? (count / totalResponses) * 100 : 0
-            }
-          })
+              percentage: parseFloat(percentage.toFixed(1))
+            };
+          });
 
           return {
             id: question.id,
