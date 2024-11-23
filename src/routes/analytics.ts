@@ -25,8 +25,8 @@ export async function analyticsRoutes(app: FastifyInstance) {
       totalSessions,
       totalResponses,
       totalQuestions: questions,
-      averageResponsesPerSession,
-      completionRate: (completionRate > 100? 100: completionRate) + '%'
+      averageResponsesPerSession: averageResponsesPerSession.toFixed(1),
+      completionRate: (completionRate > 100? 100: completionRate.toFixed(1)) + '%'
     }
   })
   app.get('/analytics/forms/:formId/questions-results', async (request, reply) => {
@@ -95,12 +95,23 @@ export async function analyticsRoutes(app: FastifyInstance) {
             by: ['text'],
             where: {
               questionId: question.id,
-              text: {
-                not: null
-              }
+              text: { not: null}
             },
             _count: true
           })
+          const countDates = () => {
+            const map = new Map()
+            uniqueResponses.forEach((response) => {
+              console.log(response.text?.substring(0, 10))
+              const count = map.get(response.text?.substring(0, 10))?.count || 0
+              map.set(response.text?.substring(0, 10), {
+                text: response.text,
+                count: count + 1
+              })
+            })
+            return Array.from(map.values())
+          }
+
           return {
             id: question.id,
             text: question.text,
@@ -110,10 +121,12 @@ export async function analyticsRoutes(app: FastifyInstance) {
             isMultipleChoice: false,
             hasNumericValues: false,
             totalResponses: uniqueResponses.length,
-            responses: uniqueResponses.map(response => ({
-              text: response.text,
-              count: response._count
-            }))
+            responses: 
+              questionType === 'date'? countDates():
+              uniqueResponses.map(response => ({
+                text: response.text,
+                count: response._count
+              }))
           }
         }
 

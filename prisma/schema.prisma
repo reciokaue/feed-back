@@ -43,7 +43,7 @@ model Form {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   categoryId Int?
-  category   Category? @relation(fields: [categoryId], references: [id], onDelete: NoAction)
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   questions Question[]
   sessions  Session[]
@@ -103,10 +103,10 @@ model Response {
   session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   optionId Int?
-  option   Option? @relation(fields: [optionId], references: [id], onDelete: NoAction)
+  option   Option? @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
   questionId Int
-  question   Question @relation(fields: [questionId], references: [id], onDelete: NoAction)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
 model Category {
@@ -116,7 +116,7 @@ model Category {
   icon  String
 
   parentId      Int? // Permite `null` para categorias principais
-  parent        Category?  @relation("CategoryToSubcategories", fields: [parentId], references: [id], onDelete: Cascade)
+  parent        Category?  @relation("CategoryToSubcategories", fields: [parentId], references: [id], onDelete: SetNull)
   subcategories Category[] @relation("CategoryToSubcategories")
 
   forms Form[]
