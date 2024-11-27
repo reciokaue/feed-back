@@ -3,3 +3,4 @@ todo.md
 prisma/dev.db
 .env
 prisma\generated
+/uploads

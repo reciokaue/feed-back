@@ -13,4 +13,5 @@ export const querySchema = z.object({
   sessionId: z.coerce.number().optional(),
   responseId: z.coerce.number().optional(),
   id: z.coerce.number().optional(),
+  toFormId: z.coerce.number().int().positive().optional(),
 })

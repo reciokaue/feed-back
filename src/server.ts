@@ -13,8 +13,14 @@ import { responseRoutes } from './routes/response'
 import { questionTypeRoutes } from './routes/questionType'
 import { analyticsRoutes } from './routes/analytics'
 import { z } from 'zod'
+import fastifyMultipart from '@fastify/multipart'
+import fastifyStatic from '@fastify/static'
+import path from 'path'
 
 const app = fastify()
+
+app.register(cors, { origin: true })
+app.register(fastifyMultipart);
 
 app.register(authRoutes)
 app.register(userRoutes)
@@ -25,8 +31,6 @@ app.register(optionRoutes)
 app.register(responseRoutes)
 app.register(questionTypeRoutes)
 app.register(analyticsRoutes)
-
-app.register(cors, { origin: true })
 
 app.setErrorHandler((error, request, reply) => {
   console.log(error)
@@ -50,3 +54,8 @@ app.setErrorHandler((error, request, reply) => {
 app.listen({ port: 3333, host: '0.0.0.0' }).then(() => {
   console.log('HTTP server listening on http://localhost:3333')
 })
+
+app.register(fastifyStatic, {
+  root: path.join(process.cwd(), 'uploads'), // Serve the "uploads" folder
+  prefix: '/uploads/', // Files will be accessible at "/uploads/<filename>"
+});

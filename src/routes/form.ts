@@ -10,6 +10,8 @@ import {
 } from '../../prisma/models/Form'
 import { formatForAdding, getArrayChanges } from '../utils/getArrayChanges'
 import { questionSelect } from '../../prisma/models/Question'
+import path from 'path'
+import fs from 'fs';
 
 const paramsSchema = z.object({
   id: z.coerce.number().positive().int().optional(),
@@ -77,7 +79,8 @@ export async function formRoutes(app: FastifyInstance) {
     }
     const newForm = await prisma.form.create({
       data: {
-        ...form,
+        name: form.name,
+        description: form.description,
         userId: request.user.sub,
         categoryId: form?.category?.id || form.categoryId,
       } as any,
@@ -87,42 +90,63 @@ export async function formRoutes(app: FastifyInstance) {
   })
   app.put('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
-    const form = FormSchema.partial().parse(request.body)
-    const category = form?.category?.id || form.categoryId
-    delete form.id
-    delete form.userId
-    delete form.category
-    delete form.createdAt
-    delete form._count
-    delete form.logoUrl
+    const form = FormSchema.pick({
+      id: true,
+      name: true,
+      description: true,
+      active: true,
+      isPublic: true,
+      category: true,
+    }).parse(request.body)
 
-    const formExists = await prisma.form.findUnique({
-      where: { id },
-      select: formDetailSelect,
-    })
-
-    if (!formExists)
-      return reply.status(404).send({ message: 'Formulário não encontrado' })
-    if (formExists?.userId !== request?.user?.sub)
-      return reply.status(400).send({ message: 'Este não é o seu formulário' })
-
-    const formQuestionsToUpdate =
-      (form.questions !== null || form.questions !== undefined) &&
-      getArrayChanges(form?.questions || [], formExists.questions || [])
-
-    const data = {
-      ...form,
-      category: { connect: { id: category } },
-      ...{ questions: formQuestionsToUpdate },
+    const formExists = await prisma.form.findUnique({where: { id }});
+    if (!formExists) {
+      return reply.status(404).send({ error: 'Formulário não encontrado.' });
     }
-    delete data.categoryId
-    // return reply.send(data)
 
-    await prisma.form.update({
+    const updatedForm = await prisma.form.update({
       where: { id },
-      data: data as any,
-    })
+      data: {
+        name: form.name,
+        description: form.description,
+        active: form.active,
+        logoUrl: form.logoUrl,
+        isPublic: form.isPublic,
+        category: {
+          connect: {id: form.category?.id}
+        }
+        // logoUrl,
+      } as any,
+    });
+
+    return reply.status(200).send(updatedForm);
   })
+  app.patch('/form/:id/upload', async (request: jwtRequest, reply) => {
+    const { id } = paramsSchema.parse(request.params)
+    const file = await request.file();
+
+    if(!file)
+      return reply.status(400).send({message: 'Imagem invalida'})
+
+    const uploadDir = path.join(process.cwd(), 'uploads')
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir);
+    }
+    const filePath = path.join(uploadDir, file.filename);
+    const writeStream = fs.createWriteStream(filePath);
+
+    file.file.pipe(writeStream);
+
+    const logoUrl = `${process.env.API_URL}/uploads/${file.filename}`;
+
+    const updatedForm = await prisma.form.update({
+      where: { id: Number(id) },
+      data: { logoUrl } as any,
+    });
+
+    return reply.status(200).send({logoUrl});
+  })
+
   app.delete('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
 
@@ -139,28 +163,5 @@ export async function formRoutes(app: FastifyInstance) {
     })
 
     return form
-  })
-
-  app.post('/form/many', async (request: jwtRequest, reply) => {
-    // const forms = z.array(FormSchema.partial()).parse(request.body)
-    // const newForms = await Promise.all(
-    //   forms.map(async (form) => {
-    //     const category = form?.category?.id || form.categoryId
-    //     const formQuestionsToUpdate = getArrayChanges(form?.questions || [], [])
-    //     const data = {
-    //       ...form,
-    //       category: { connect: { id: category } },
-    //       ...{ questions: formQuestionsToUpdate },
-    //     }
-    //     return data
-    //     // delete data.categoryId;
-
-    //     // return await prisma.form.create({
-    //     //     data: data as any,
-    //     // });
-    //   }),
-    // )
-
-    reply.status(201).send()
   })
 }
