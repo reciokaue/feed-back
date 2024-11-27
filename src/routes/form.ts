@@ -8,7 +8,7 @@ import {
   FormSchema,
   formSelect,
 } from '../../prisma/models/Form'
-import { formatForAdding, getArrayChanges } from '../utils/getArrayChanges'
+import { formatForAdding } from '../utils/getArrayChanges'
 import { questionSelect } from '../../prisma/models/Question'
 import path from 'path'
 import fs from 'fs';
@@ -124,23 +124,34 @@ export async function formRoutes(app: FastifyInstance) {
   app.patch('/form/:id/upload', async (request: jwtRequest, reply) => {
     const { id } = paramsSchema.parse(request.params)
     const file = await request.file();
-
+    
     if(!file)
       return reply.status(400).send({message: 'Imagem invalida'})
 
-    const uploadDir = path.join(process.cwd(), 'uploads')
+    const formExists = await prisma.form.findUnique({
+      where: { id }
+    })
+
+    if(!file)
+      return reply.status(404).send({message: 'Formulário não existe'})
+
+    if(formExists?.logoUrl)
+      fs.unlink(path.join(process.cwd(), 'uploads', formExists.logoUrl.split('/uploads/')[1]), console.log)
+
+    const filename = `${Date.now()}-${file.filename}`
+    const uploadDir = path.join(process.cwd(), 'uploads/thumbnail')
+    const filePath = path.join(uploadDir, filename);
+    const writeStream = fs.createWriteStream(filePath);
+    
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir);
     }
-    const filePath = path.join(uploadDir, file.filename);
-    const writeStream = fs.createWriteStream(filePath);
-
     file.file.pipe(writeStream);
+    
+    const logoUrl = `${process.env.API_URL}/uploads/thumbnail/${filename}`;
 
-    const logoUrl = `${process.env.API_URL}/uploads/${file.filename}`;
-
-    const updatedForm = await prisma.form.update({
-      where: { id: Number(id) },
+    await prisma.form.update({
+      where: { id },
       data: { logoUrl } as any,
     });
 

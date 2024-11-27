@@ -9,6 +9,7 @@ export const UserSchema = z.object({
   name: z.string(),
   email: z.string(),
   password: z.string(),
+  profileImage: z.string().nullable(),
 })
 
 export type User = z.infer<typeof UserSchema>
