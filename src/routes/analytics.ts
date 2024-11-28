@@ -102,7 +102,6 @@ export async function analyticsRoutes(app: FastifyInstance) {
           const countDates = () => {
             const map = new Map()
             uniqueResponses.forEach((response) => {
-              console.log(response.text?.substring(0, 10))
               const count = map.get(response.text?.substring(0, 10))?.count || 0
               map.set(response.text?.substring(0, 10), {
                 text: response.text,

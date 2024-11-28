@@ -1,6 +1,5 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
-import { z } from 'zod'
 import { jwtRequest, verifyJwt } from '../middlewares/JWTAuth'
 import { querySchema } from '../utils/querySchema'
 import {
@@ -13,16 +12,11 @@ import { questionSelect } from '../../prisma/models/Question'
 import path from 'path'
 import fs from 'fs';
 
-const paramsSchema = z.object({
-  id: z.coerce.number().positive().int().optional(),
-  templateId: z.coerce.number().positive().int().optional(),
-})
-
 export async function formRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
   app.get('/forms', async (request: jwtRequest, reply) => {
-    const { page, pageSize, query, isPublic, categoryId } = querySchema.parse(
+    const { page, pageSize, query, isPublic, categoryId, datasense } = querySchema.parse(
       request.query,
     )
 
@@ -33,9 +27,8 @@ export async function formRoutes(app: FastifyInstance) {
       ...(query && {
         OR: [{ name: { contains: query } }, { about: { contains: query } }],
       }),
-      ...(isPublic
-        ? { isPublic: true, active: true }
-        : { userId: request.user?.sub }),
+      ...(isPublic? { isPublic: true, active: true, not: {userId: 1} }: { userId: request.user?.sub }),
+      ...(datasense && { userId: 1, isPublic: true, active: true }),
       ...(categoryId && { category: { id: categoryId } }),
     }
 
@@ -53,7 +46,7 @@ export async function formRoutes(app: FastifyInstance) {
     reply.send({ meta: { page, pageSize, totalCount }, forms })
   })
   app.get('/form/:id', async (request, reply) => {
-    const { id } = paramsSchema.parse(request.params)
+    const { id } = querySchema.parse(request.params)
 
     const form = await prisma.form.findUnique({
       where: { id },
@@ -67,7 +60,7 @@ export async function formRoutes(app: FastifyInstance) {
   })
   app.post('/form', async (request: jwtRequest, reply) => {
     const form = FormSchema.partial().parse(request.body)
-    const { templateId } = paramsSchema.parse(request.query)
+    const { templateId } = querySchema.parse(request.query)
 
     if (templateId) {
       const questions = await prisma.question.findMany({
@@ -89,7 +82,7 @@ export async function formRoutes(app: FastifyInstance) {
     reply.status(200).send(newForm)
   })
   app.put('/form/:id', async (request: jwtRequest, reply) => {
-    const { id } = paramsSchema.parse(request.params)
+    const { id } = querySchema.parse(request.params)
     const form = FormSchema.pick({
       id: true,
       name: true,
@@ -121,7 +114,7 @@ export async function formRoutes(app: FastifyInstance) {
     return reply.status(200).send(updatedForm);
   })
   app.patch('/form/:id/upload', async (request: jwtRequest, reply) => {
-    const { id } = paramsSchema.parse(request.params)
+    const { id } = querySchema.parse(request.params)
     const file = await request.file();
     
     if(!file)
@@ -160,9 +153,8 @@ export async function formRoutes(app: FastifyInstance) {
 
     return reply.status(200).send({logoUrl});
   })
-
   app.delete('/form/:id', async (request: jwtRequest, reply) => {
-    const { id } = paramsSchema.parse(request.params)
+    const { id } = querySchema.parse(request.params)
 
     const form = await prisma.form.findUnique({
       where: { id },

@@ -77,7 +77,6 @@ export async function authRoutes(app: FastifyInstance) {
       token: z.string(),
     })
     const { token } = bodySchema.parse(request.body)
-    console.log()
     const newToken = jwt.verify(
       token,
       secret,
