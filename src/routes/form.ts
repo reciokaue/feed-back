@@ -76,6 +76,7 @@ export async function formRoutes(app: FastifyInstance) {
         description: form.description,
         userId: request.user.sub,
         categoryId: form?.category?.id || form.categoryId,
+        ...(templateId && {questions: form.questions})
       } as any,
     })
 
