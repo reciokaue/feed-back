@@ -54,7 +54,8 @@ export async function userRoutes(app: FastifyInstance) {
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {
-        ...user,
+        name: user.name,
+        email: user.email,
         ...(user.password && { password: hashedPassword }),
       },
     })
@@ -84,7 +85,11 @@ export async function userRoutes(app: FastifyInstance) {
     const writeStream = fs.createWriteStream(filePath);
     
     if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
+      try {
+        fs.mkdirSync(uploadDir);
+      } catch (e) {
+        console.log(e)
+      }
     }
     file.file.pipe(writeStream);
     

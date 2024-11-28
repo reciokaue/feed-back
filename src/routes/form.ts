@@ -110,7 +110,6 @@ export async function formRoutes(app: FastifyInstance) {
         name: form.name,
         description: form.description,
         active: form.active,
-        logoUrl: form.logoUrl,
         isPublic: form.isPublic,
         category: {
           connect: {id: form.category?.id}
@@ -144,7 +143,11 @@ export async function formRoutes(app: FastifyInstance) {
     const writeStream = fs.createWriteStream(filePath);
     
     if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
+      try {
+        fs.mkdirSync(uploadDir);
+      } catch (e) {
+        console.log(e)
+      }
     }
     file.file.pipe(writeStream);
     
