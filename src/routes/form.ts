@@ -27,7 +27,7 @@ export async function formRoutes(app: FastifyInstance) {
       ...(query && {
         OR: [{ name: { contains: query } }, { about: { contains: query } }],
       }),
-      ...(isPublic? { isPublic: true, active: true, not: {userId: 1} }: { userId: request.user?.sub }),
+      ...(isPublic? { isPublic: true, active: true, userId: {not: 1}}: !datasense && {  userId: request.user?.sub }),
       ...(datasense && { userId: 1, isPublic: true, active: true }),
       ...(categoryId && { category: { id: categoryId } }),
     }

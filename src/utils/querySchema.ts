@@ -15,5 +15,7 @@ export const querySchema = z.object({
   id: z.coerce.number().optional(),
   toFormId: z.coerce.number().int().positive().optional(),
   templateId: z.coerce.number().int().positive().optional(),
-  datasense: z.coerce.boolean().optional().default(false)
+  datasense: z.coerce.boolean().optional().default(false),
+  userId: z.coerce.number().int().positive().optional(),
+  count: z.coerce.number().int().positive().optional(),
 })

@@ -12,6 +12,7 @@ import { optionRoutes } from './routes/options'
 import { responseRoutes } from './routes/response'
 import { questionTypeRoutes } from './routes/questionType'
 import { analyticsRoutes } from './routes/analytics'
+import { fakerRoutes } from './routes/faker'
 import { z } from 'zod'
 import fastifyMultipart from '@fastify/multipart'
 import fastifyStatic from '@fastify/static'
@@ -31,6 +32,7 @@ app.register(optionRoutes)
 app.register(responseRoutes)
 app.register(questionTypeRoutes)
 app.register(analyticsRoutes)
+app.register(fakerRoutes)
 
 app.setErrorHandler((error, request, reply) => {
   console.log(error)
