@@ -27,13 +27,18 @@ export async function formRoutes(app: FastifyInstance) {
       ...(query && {
         OR: [{ name: { contains: query } }, { about: { contains: query } }],
       }),
-      ...(isPublic? { isPublic: true, active: true, userId: {not: 1}}: !datasense && {  userId: request.user?.sub }),
+      ...(isPublic && { isPublic: true, active: true }),
       ...(datasense && { userId: 1, isPublic: true, active: true }),
-      ...(categoryId && { category: { id: categoryId } }),
+      ...(categoryId && { category: {
+        OR: [
+          { id: categoryId },
+          { parentId: { equals: categoryId} }
+        ]
+      }  }),
     }
 
     const totalCount = await prisma.form.count({
-      where: filters,
+      where: filters
     })
 
     const forms = await prisma.form.findMany({

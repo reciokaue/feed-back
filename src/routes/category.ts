@@ -31,11 +31,11 @@ export async function categoryRoutes(app: FastifyInstance) {
       categories: category
     })
   })
-  app.get('/category/:categoryName', async (request, reply) => {
-    const { categoryName } = querySchema.parse(request.params)
+  app.get('/category/:categoryId', async (request, reply) => {
+    const { categoryId } = querySchema.parse(request.params)
     
     const category = await prisma.category.findFirst({
-      where: { name: categoryName},
+      where: { id: categoryId},
       select: CategorySelect,
     });
 

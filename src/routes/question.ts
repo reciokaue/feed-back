@@ -22,24 +22,38 @@ export async function questionRoutes(app: FastifyInstance) {
     return question
   })
   app.get('/questions', async (request, reply) => {
-    const { query, page, pageSize, categoryId } = querySchema.parse(request.query)
+    const { query, page, pageSize, categoryId, questionTypeId  } = querySchema.parse(request.query)
+
+    const filters: any = {
+      form: {
+        isPublic: true,
+        ...(categoryId && { OR: [
+          {categoryId: categoryId},
+          {category: {
+            parentId: categoryId
+          }}
+        ] }),
+      },
+      ...(query && {
+        text: { contains: query, mode: 'insensitive' },
+      }),
+      ...(questionTypeId && {
+        typeId: questionTypeId
+      })
+    }
+
+    const totalCount = await prisma.question.count({
+      where: filters,
+    })
 
     const questions = await prisma.question.findMany({
-      where: {
-        form: {
-          isPublic: true,
-          ...(categoryId && { categoryId: categoryId }),
-        },
-        ...(query && {
-          text: { contains: query, mode: 'insensitive' },
-        }),
-      },
+      where: filters,
       take: pageSize,
       skip: pageSize * page,
       select: { ...questionSelect, formId: true },
     })
 
-    return questions
+    return reply.send({ meta: { page, pageSize, totalCount }, questions })
   })
   app.post('/question/:questionId/form/:formId', async (request: jwtRequest, reply) => {
     const { questionId, formId } = querySchema.parse(request.params)

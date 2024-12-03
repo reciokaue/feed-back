@@ -18,4 +18,5 @@ export const querySchema = z.object({
   datasense: z.coerce.boolean().optional().default(false),
   userId: z.coerce.number().int().positive().optional(),
   count: z.coerce.number().int().positive().optional(),
+  questionTypeId: z.coerce.number().int().positive().optional(),
 })
