@@ -25,11 +25,8 @@ export async function formRoutes(app: FastifyInstance) {
 
     const filters: any = {
       ...(query && {OR: [{ name: { contains: query } }, { description: { contains: query } }]}),
-      ...(isPublic && { isPublic: true, active: true }),
-      ...(form === 'datasense'?
-          { userId: 1 }:
-          form === 'community' && 
-          { userId: {not: 1 }}
+      ...(isPublic ? { isPublic: true, active: true, userId: {not: request?.user?.sub}}: {userId: request?.user?.sub}),
+      ...(form === 'datasense'? { userId: 1 }: form === 'community' && { userId: {not: 1 }}
       ),
       ...(categoryId && { category: {
         OR: [
