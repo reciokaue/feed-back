@@ -54,6 +54,7 @@ export async function authRoutes(app: FastifyInstance) {
           email,
           name,
           password: hashedPassword,
+          profileImage: `https://ui-avatars.com/api/?name=${name.replace(" ", "+")}&background=random`
         },
       })
       .catch((e) => {

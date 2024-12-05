@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { CategorySchema } from './Category'
+import { CategorySchema, FormCategorySelect } from './Category'
 import { QuestionSchema, questionSelect } from './Question'
 
 /// //////////////////////////////////////
@@ -37,7 +37,12 @@ export const formSelect = {
   logoUrl: true,
   isPublic: true,
   createdAt: true,
-  userId: true,
+  user: {
+    select: {
+      id: true,
+      profileImage: true,
+    }
+  },
   category: {
     select: {
       id: true,

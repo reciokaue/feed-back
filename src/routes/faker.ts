@@ -174,12 +174,15 @@ export async function fakerRoutes(app: FastifyInstance) {
 }
 
 function generateUsers(count?: number){
-  const users = Array.from({ length: count || 10 }, () => ({
-    name: faker.company.name(),
-    email: faker.internet.email(),
-    password: '$2b$10$Rc1qP.k1UMGMAmZaup/1SO6MrNrIJszhKNSfh/YoWhEfxV5eRIidi',
-    profileImage: faker.image.avatar(),
-  }));
+  const users = Array.from({ length: count || 10 }, () => {
+    const name = faker.company.name()
+    return {
+      name,
+      email: faker.internet.email(),
+      password: '$2b$10$Rc1qP.k1UMGMAmZaup/1SO6MrNrIJszhKNSfh/YoWhEfxV5eRIidi',
+      profileImage: `https://ui-avatars.com/api/?name=${name.replace(" ", "+")}&background=random`
+    }
+  });
 
   return users
 }

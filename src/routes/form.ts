@@ -16,7 +16,7 @@ export async function formRoutes(app: FastifyInstance) {
   app.addHook('onRequest', verifyJwt)
 
   app.get('/forms', async (request: jwtRequest, reply) => {
-    const { page, pageSize, query, isPublic, categoryId, datasense } = querySchema.parse(
+    const { page, pageSize, query, isPublic, categoryId, form } = querySchema.parse(
       request.query,
     )
 
@@ -24,11 +24,13 @@ export async function formRoutes(app: FastifyInstance) {
       return reply.status(401).send({message: 'Você não esta autenticado'})
 
     const filters: any = {
-      ...(query && {
-        OR: [{ name: { contains: query } }, { about: { contains: query } }],
-      }),
+      ...(query && {OR: [{ name: { contains: query } }, { description: { contains: query } }]}),
       ...(isPublic && { isPublic: true, active: true }),
-      ...(datasense && { userId: 1, isPublic: true, active: true }),
+      ...(form === 'datasense'?
+          { userId: 1 }:
+          form === 'community' && 
+          { userId: {not: 1 }}
+      ),
       ...(categoryId && { category: {
         OR: [
           { id: categoryId },
