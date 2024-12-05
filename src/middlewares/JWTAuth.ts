@@ -34,11 +34,11 @@ function isPublicPath(url: string): boolean {
 }
 
 export async function verifyJwt(
-  request: jwtRequest | any,
+  request: jwtRequest,
   reply: FastifyReply,
 ) {
   try {
-    if (isPublicPath(request.url)) {
+    if (isPublicPath(request.url) && request.method === 'GET') {
       return;
     }
 

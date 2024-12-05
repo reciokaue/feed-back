@@ -160,7 +160,7 @@ export async function formRoutes(app: FastifyInstance) {
   })
   app.delete('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = querySchema.parse(request.params)
-
+    console.log(id, request.user)
     const form = await prisma.form.findUnique({
       where: { id },
     })
