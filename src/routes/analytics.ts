@@ -4,13 +4,19 @@ import { querySchema } from '../utils/querySchema'
 
 export async function analyticsRoutes(app: FastifyInstance) {
   app.get('/analytics/forms/:formId/summary', async (request) => {
-    const { formId } = querySchema.parse(request.params)
-    
+    const { formId, query, from, to } = querySchema.parse(request.params)
+
     const [totalSessions, totalResponses, questions] = await Promise.all([
-      prisma.session.count({ where: { formId } }),
-      prisma.response.count({ 
-        where: { question: { formId } }
-      }),
+      prisma.session.count({ where: {
+        formId,
+        ...(query && {responses: { some: { text: {contains: query, mode: 'insensitive'} } }}),
+        ...(from  && to && {createdAt: { gte: from, lte: to }})
+      } }),
+      prisma.response.count({ where: {
+        session: { formId },
+        ...(query && { some: { text: {contains: query, mode: 'insensitive'} } }),
+        ...(from && to && {session: { createdAt: { gte: from, lte: to } }})
+      } }),
       prisma.question.count({ where: { formId } })
     ])
 
@@ -30,9 +36,8 @@ export async function analyticsRoutes(app: FastifyInstance) {
     }
   })
   app.get('/analytics/forms/:formId/questions-results', async (request, reply) => {
-    const { formId } = querySchema.parse(request.params)
+    const { formId, query, from, to } = querySchema.parse(request.params)
     
-    // Busca todas as questões do formulário com seus tipos e opções
     const questions = await prisma.question.findMany({
       where: { formId },
       include: {
@@ -58,9 +63,9 @@ export async function analyticsRoutes(app: FastifyInstance) {
             by: ['optionId'],
             where: {
               questionId: question.id,
-              optionId: {
-                not: null,
-              },
+              optionId: { not: null },
+              ...(query && { some: { text: {contains: query, mode: 'insensitive'} } }),
+              ...(from && to && {session: { createdAt: { gte: from, lte: to } }})
             },
             _count: true,
           });
@@ -95,7 +100,9 @@ export async function analyticsRoutes(app: FastifyInstance) {
             by: ['text'],
             where: {
               questionId: question.id,
-              text: { not: null}
+              text: { not: null},
+              ...(query && { some: { text: {contains: query, mode: 'insensitive'} } }),
+              ...(from && to && {session: { createdAt: { gte: from, lte: to } }})
             },
             _count: true
           })
@@ -135,7 +142,8 @@ export async function analyticsRoutes(app: FastifyInstance) {
             where: {
               session:{ formId },
               questionId: question.id,
-              value: {not: null}
+              value: {not: null},
+              ...(from && to && {session: { createdAt: { gte: from, lte: to } }})
             },
             select: {
               value: true

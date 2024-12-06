@@ -18,5 +18,7 @@ export const querySchema = z.object({
   userId: z.coerce.number().int().positive().optional(),
   count: z.coerce.number().int().positive().optional(),
   questionTypeId: z.coerce.number().int().positive().optional(),
-  form: z.string().optional()
+  form: z.string().optional(),
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional()
 })

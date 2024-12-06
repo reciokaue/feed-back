@@ -34,7 +34,7 @@ function isPublicPath(url: string): boolean {
 }
 
 export async function verifyJwt(
-  request: jwtRequest,
+  request: jwtRequest | any,
   reply: FastifyReply,
 ) {
   try {
