@@ -18,7 +18,9 @@
     "axios": "^1.5.0",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.3.1",
+    "exceljs": "^4.4.0",
     "fastify": "^4.23.1",
+    "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
     "zod": "^3.22.2"
   },
@@ -27,6 +29,7 @@
     "@mermaid-js/mermaid-cli": "^10.4.0",
     "@rocketseat/eslint-config": "^2.1.0",
     "@types/bcrypt": "^5.0.0",
+    "@types/json2csv": "^5.0.7",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.6.0",
     "eslint": "^8.49.0",

@@ -17,13 +17,16 @@ export interface jwtRequest extends FastifyRequest {
 }
 
 const publicPaths = [
-  '/forms', '/responses/form/:formId', '/form/:id'
+  '/forms', '/responses/form/:formId', '/form/:id', '/categories'
 ];
 
-function isPublicPath(url: string): boolean {
+function isPublicPath(url) {
+  // Remove query parameters and hash from the URL
+  const cleanedUrl = url.split('?')[0].split('#')[0];
+
   return publicPaths.some((path) => {
     const pathSegments = path.split('/');
-    const urlSegments = url.split('/');
+    const urlSegments = cleanedUrl.split('/');
 
     if (pathSegments.length !== urlSegments.length) return false;
 
@@ -53,8 +56,6 @@ export async function verifyJwt(
           .status(403)
           .send({ message: 'Failed to authenticate', error: err });
       }
-      console.log(decoded)
-
       request.user = decoded as jwtUser;
     });
   } catch (err) {

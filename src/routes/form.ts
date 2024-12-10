@@ -80,6 +80,8 @@ export async function formRoutes(app: FastifyInstance) {
         description: form.description,
         userId: request.user.sub,
         categoryId: form?.category?.id || form.categoryId,
+        isPublic: true,
+        active: true,
         ...(templateId && {questions: form.questions})
       } as any,
       select: formDetailSelect
@@ -113,8 +115,8 @@ export async function formRoutes(app: FastifyInstance) {
         category: {
           connect: {id: form.category?.id}
         }
-        // logoUrl,
       } as any,
+      select: formDetailSelect
     });
 
     return reply.status(200).send(updatedForm);
@@ -123,15 +125,17 @@ export async function formRoutes(app: FastifyInstance) {
     const { id } = querySchema.parse(request.params)
     const file = await request.file();
     
-    if(!file)
-      return reply.status(400).send({message: 'Imagem invalida'})
+    if(!file){
+      await prisma.form.update({
+        where: { id },
+        data: { logoUrl: null} as any,
+      });
+      return reply.status(200).send({logoUrl: null});
+    }
 
     const formExists = await prisma.form.findUnique({
       where: { id }
     })
-
-    if(!file)
-      return reply.status(404).send({message: 'Formulário não existe'})
 
     if(formExists?.logoUrl)
       fs.unlink(path.join(process.cwd(), 'uploads', formExists.logoUrl.split('/uploads/')[1]), console.log)
@@ -151,6 +155,7 @@ export async function formRoutes(app: FastifyInstance) {
     file.file.pipe(writeStream);
     
     const logoUrl = `${process.env.API_URL}/uploads/thumbnail/${filename}`;
+    console.log(logoUrl)
 
     await prisma.form.update({
       where: { id },
@@ -161,7 +166,6 @@ export async function formRoutes(app: FastifyInstance) {
   })
   app.delete('/form/:id', async (request: jwtRequest, reply) => {
     const { id } = querySchema.parse(request.params)
-    console.log(id, request.user)
     const form = await prisma.form.findUnique({
       where: { id },
     })

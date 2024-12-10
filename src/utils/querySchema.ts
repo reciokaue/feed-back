@@ -20,5 +20,6 @@ export const querySchema = z.object({
   questionTypeId: z.coerce.number().int().positive().optional(),
   form: z.string().optional(),
   from: z.coerce.date().optional(),
-  to: z.coerce.date().optional()
+  to: z.coerce.date().optional(),
+  format: z.string().optional()
 })

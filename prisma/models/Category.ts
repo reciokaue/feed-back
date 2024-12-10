@@ -31,6 +31,7 @@ export const CategorySelect = {
   label: true,
   name: true,
   icon: true,
+  parentId: true,
   subcategories: {
     select: {
       id: true,
