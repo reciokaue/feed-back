@@ -41,9 +41,9 @@ export async function verifyJwt(
   reply: FastifyReply,
 ) {
   try {
-    if (isPublicPath(request.url) && request.method === 'GET') {
-      return;
-    }
+    // if (isPublicPath(request.url) && request.method === 'GET') {
+    //   return;
+    // }
 
     const bearerHeader = request.headers.authorization;
     const token = typeof bearerHeader !== 'undefined' && bearerHeader.split(' ')[1];
