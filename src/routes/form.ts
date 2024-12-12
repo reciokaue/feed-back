@@ -69,7 +69,7 @@ export async function formRoutes(app: FastifyInstance) {
     if (templateId) {
       const questions = await prisma.question.findMany({
         where: { formId: templateId },
-        select: questionSelect,
+        select: {...questionSelect, _count: false},
       })
 
       form.questions = formatForAdding(questions) as any

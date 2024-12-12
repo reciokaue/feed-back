@@ -17,6 +17,13 @@ export const QuestionSchema = z.object({
   questionType: QuestionTypeSchema.optional(),
   typeId: z.number().optional(),
   options: z.array(OptionSchema.partial()).optional(),
+
+  _count: z
+    .object({
+      questions: z.number(),
+      sessions: z.number(),
+    })
+    .optional(),
 })
 
 export type Question = z.infer<typeof QuestionSchema>
@@ -57,6 +64,11 @@ export const questionSelect = {
       text: true,
     },
   },
+  _count: {
+    select: {
+      responses: true
+    }
+  }
 }
 export const questionResponsesSelect = {
   id: true,
