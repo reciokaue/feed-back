@@ -24,7 +24,7 @@ export async function formRoutes(app: FastifyInstance) {
       return reply.status(401).send({message: 'Você não esta autenticado'})
 
     const filters: any = {
-      ...(query && {OR: [{ name: { contains: query } }, { description: { contains: query } }]}),
+      ...(query && {OR: [{ name: { contains: query, mode: 'insensitive' } }, { description: { contains: query, mode: 'insensitive' } }]}),
       ...(isPublic ? { isPublic: true, active: true }: {userId: request?.user?.sub}),
       ...(form === 'datasense'? { userId: 1 }: form === 'community' && { userId: {not: 1 }}
       ),

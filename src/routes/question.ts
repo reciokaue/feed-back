@@ -35,7 +35,10 @@ export async function questionRoutes(app: FastifyInstance) {
         ] }),
       },
       ...(query && {
-        text: { contains: query, mode: 'insensitive' },
+        OR: [
+         { text: { contains: query, mode: 'insensitive' }},
+         { options: { some: {text: { contains: query, mode: 'insensitive' }}}}
+        ]
       }),
       ...(questionTypeId && {
         typeId: questionTypeId

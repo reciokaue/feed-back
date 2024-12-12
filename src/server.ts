@@ -20,7 +20,7 @@ import path from 'path'
 
 const app = fastify()
 
-app.register(cors, { origin: true })
+app.register(cors, { origin: true,  })
 app.register(fastifyMultipart);
 
 app.register(authRoutes)

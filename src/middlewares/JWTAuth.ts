@@ -41,12 +41,12 @@ export async function verifyJwt(
   reply: FastifyReply,
 ) {
   try {
-    // if (isPublicPath(request.url) && request.method === 'GET') {
-    //   return;
-    // }
-
     const bearerHeader = request.headers.authorization;
     const token = typeof bearerHeader !== 'undefined' && bearerHeader.split(' ')[1];
+    
+    if (isPublicPath(request.url) && request.method === 'GET' && !token) {
+      return;
+    }
 
     if (!token) return reply.status(404).send({ message: 'Missing token' });
 

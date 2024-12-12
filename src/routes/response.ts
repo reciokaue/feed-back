@@ -67,6 +67,9 @@ export async function responseRoutes(app: FastifyInstance) {
       },
       take: pageSize,
       skip: pageSize * page,
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
     const totalCount = await prisma.session.count({
       where: filters
