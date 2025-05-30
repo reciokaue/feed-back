@@ -152,17 +152,21 @@ export async function analyticsRoutes(app: FastifyInstance) {
 
           const map: Record<number, number> = {};
           const numericResponses = responses.map(r => r.value)
-
-          numericResponses.concat(
-            (questionType === 'slider'? [0,1,2,3,4,5,6,7,8,9,10]: [1,2,3,4,5])
-          ).forEach(value => {
-            map[value] = (map[value] + 1) || 0;
-          });
+          numericResponses.concat((questionType === 'slider'? [0,1,2,3,4,5,6,7,8,9,10]: [1,2,3,4,5])).forEach(value => {map[value] = (map[value] + 1) || 0});
           
-          const values = Object.values(map)
-          const min = Math.min(...values);
-          const max = Math.max(...values);
-          const average = numericResponses.reduce((acc, val) => acc + val, 0) / numericResponses.length;
+          const entries = Object.entries(map); 
+          const minEntry = entries.reduce((min, curr) => (curr[1] < min[1] ? curr : min), entries[0]);
+          const maxEntry = entries.reduce((max, curr) => (curr[1] > max[1] ? curr : max), entries[0]);
+
+          const min = `${minEntry[0]}: ${minEntry[1]}`;
+          const max = `${maxEntry[0]}: ${maxEntry[1]}`;
+
+          const sortedEntries = entries.sort((a, b) => a[1] - b[1]);
+          const medianIndex = Math.floor(sortedEntries.length / 2);
+          const medianEntry = sortedEntries[medianIndex];
+
+          const median = `${medianEntry[0]}: ${medianEntry[1]}`;
+          const average = (numericResponses.reduce((acc, val) => acc + val, 0) / numericResponses.length)?.toFixed(2);
 
           const chartData = Object.entries(map).map(([value, count]) => ({
             label: value,
@@ -182,7 +186,7 @@ export async function analyticsRoutes(app: FastifyInstance) {
               average,
               min,
               max,
-              median: numericResponses.sort()[Math.floor(numericResponses.length / 2)]
+              median
             },
             chartData,
           };

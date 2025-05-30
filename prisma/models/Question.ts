@@ -13,18 +13,19 @@ export const QuestionSchema = z.object({
   index: z.number().int(),
   required: z.boolean().default(false),
   formId: z.number().int(),
-
   questionType: QuestionTypeSchema.optional(),
   typeId: z.number().optional(),
   options: z.array(OptionSchema.partial()).optional(),
 
   _count: z
     .object({
-      questions: z.number(),
-      sessions: z.number(),
+      responses: z.number(),
     })
     .optional(),
-})
+}).transform((question) => {
+  const { _count, ...rest } = question;
+  return rest;
+});
 
 export type Question = z.infer<typeof QuestionSchema>
 

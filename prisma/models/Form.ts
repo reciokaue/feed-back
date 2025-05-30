@@ -18,7 +18,7 @@ export const FormSchema = z.object({
   userId: z.number().int().nullable(),
   category: CategorySchema.optional(),
   categoryId: z.number().optional(),
-  questions: z.array(QuestionSchema.partial()).optional(),
+  questions: z.array(QuestionSchema).optional(),
   _count: z
     .object({
       questions: z.number(),

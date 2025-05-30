@@ -17,11 +17,10 @@ export interface jwtRequest extends FastifyRequest {
 }
 
 const publicPaths = [
-  '/forms', '/responses/form/:formId', '/form/:id', '/categories'
+  '/forms', '/responses/form/:formId', '/form/:id', '/categories', '/category/:categoryId'
 ];
 
 function isPublicPath(url) {
-  // Remove query parameters and hash from the URL
   const cleanedUrl = url.split('?')[0].split('#')[0];
 
   return publicPaths.some((path) => {

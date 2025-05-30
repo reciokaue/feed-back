@@ -41,3 +41,11 @@ export const CategorySelect = {
     },
   },
 }
+
+export const FormCategorySelect = {
+  id: true,
+  label: true,
+  name: true,
+  icon: true,
+  parentId: true,
+}
